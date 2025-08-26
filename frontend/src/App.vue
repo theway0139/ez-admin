@@ -1,7 +1,8 @@
 <template>
-  <div id="app" :class="{ 'dark-mode': isDarkMode }">
+  <div id="app" :class="{ 'dark-mode': isDarkMode, 'login-page': isLoginPage }">
     <!-- 侧边栏 -->
     <aside 
+      v-if="!isLoginPage"
       class="sidebar" 
       :class="{ 
         'collapsed': isCollapsed,
@@ -9,8 +10,8 @@
       }"
     >
       <div class="sidebar-header">
-        <img src="/vite.svg" alt="Logo" class="logo" />
-        <span v-show="!isCollapsed" class="title">管理系统</span>
+        <img src="./assets/vue.svg" alt="Logo" class="logo" />
+        <span v-show="!isCollapsed" class="title">国粒智能边缘控制台</span>
       </div>
       
       <el-menu
@@ -25,6 +26,16 @@
           <template #title>仪表盘</template>
         </el-menu-item>
         
+        <el-menu-item index="/robots">
+          <el-icon><Avatar /></el-icon>
+          <template #title>机器人管理</template>
+        </el-menu-item>
+        
+        <el-menu-item index="/tasks">
+          <el-icon><Memo /></el-icon>
+          <template #title>任务调度</template>
+        </el-menu-item>
+        
         <el-menu-item index="/users">
           <el-icon><User /></el-icon>
           <template #title>用户管理</template>
@@ -34,13 +45,18 @@
           <el-icon><Setting /></el-icon>
           <template #title>系统设置</template>
         </el-menu-item>
+        
+        <el-menu-item index="/logs">
+          <el-icon><Document /></el-icon>
+          <template #title>日志信息</template>
+        </el-menu-item>
       </el-menu>
     </aside>
 
     <!-- 主内容区域 -->
-    <div class="main-container">
+    <div class="main-container" :class="{ 'fullscreen': isLoginPage }">
       <!-- 顶部导航 -->
-      <header class="header">
+      <header v-if="!isLoginPage" class="header">
         <div class="header-left">
           <el-button
             type="text"
@@ -102,7 +118,7 @@
       </header>
 
       <!-- 主内容 -->
-      <main class="main-content">
+      <main class="main-content" :class="{ 'fullscreen-content': isLoginPage }">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <component :is="Component" />
@@ -113,7 +129,7 @@
 
     <!-- 移动端遮罩 -->
     <div 
-      v-if="isMobile && !isCollapsed" 
+      v-if="isMobile && !isCollapsed && !isLoginPage" 
       class="mobile-overlay"
       @click="closeMobileSidebar"
     ></div>
@@ -132,7 +148,10 @@ import {
   Moon,
   Sunny,
   Bell,
-  ArrowDown
+  ArrowDown,
+  Document,
+  Avatar,
+  Memo
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
@@ -148,9 +167,13 @@ const router = useRouter()
 // 计算属性
 const activeMenu = computed(() => route.path)
 
+const isLoginPage = computed(() => route.path === '/login')
+
 const breadcrumbs = computed(() => {
   const pathMap: Record<string, string> = {
     '/dashboard': '仪表盘',
+    '/robots': '机器人管理',
+    '/tasks': '任务调度',
     '/users': '用户管理',
     '/settings': '系统设置'
   }
@@ -246,21 +269,33 @@ watch(route, () => {
 <style scoped>
 /* CSS 变量定义 */
 :root {
-  --primary-color: #409eff;
-  --sidebar-bg: #304156;
+  --primary-color: #7e57c2;
+  --primary-light: #b085f5;
+  --primary-dark: #4d2c91;
+  --sidebar-bg: #252836;
+  --sidebar-item-hover: #2e3347;
+  --sidebar-item-active: #7e57c2;
+  --sidebar-text: #a0a3bd;
+  --sidebar-text-active: #ffffff;
   --header-bg: #ffffff;
   --text-color: #303133;
-  --border-color: #e4e7ed;
+  --border-color: rgba(228, 231, 237, 0.1);
   --hover-bg: #f5f7fa;
 }
 
 .dark-mode {
-  --primary-color: #409eff;
-  --sidebar-bg: #1f2937;
-  --header-bg: #374151;
+  --primary-color: #7e57c2;
+  --primary-light: #b085f5;
+  --primary-dark: #4d2c91;
+  --sidebar-bg: #1a1d2d;
+  --sidebar-item-hover: #252836;
+  --sidebar-item-active: #7e57c2;
+  --sidebar-text: #a0a3bd;
+  --sidebar-text-active: #ffffff;
+  --header-bg: #252836;
   --text-color: #f9fafb;
-  --border-color: #4b5563;
-  --hover-bg: #4b5563;
+  --border-color: rgba(75, 85, 99, 0.2);
+  --hover-bg: #2e3347;
 }
 
 #app {
@@ -276,63 +311,113 @@ watch(route, () => {
   background-color: #111827;
 }
 
+/* 登录页面全屏样式 */
+.login-page {
+  display: block !important;
+}
+
+.login-page .main-container.fullscreen {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  margin: 0;
+}
+
+.login-page .main-content.fullscreen-content {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: none;
+}
+
 /* 侧边栏样式 */
 .sidebar {
-  width: 240px;
+  width: 250px;
   height: 100vh;
   background-color: var(--sidebar-bg);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
   overflow-y: auto;
+  position: relative;
 }
 
 .sidebar.collapsed {
-  width: 64px;
+  width: 70px;
 }
 
 .sidebar-header {
   height: 60px;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 0 10px;
+  border-bottom: 2px solid #e5e7eb;
   flex-shrink: 0;
+  background: linear-gradient(to right, var(--primary-dark), var(--primary-color));
 }
 
 .logo {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   margin-right: 12px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed .logo {
+  margin-right: 0;
 }
 
 .title {
-  color: var(--text-color);
+  color: black;
   font-size: 18px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-menu {
   border: none;
   background-color: transparent;
   flex: 1;
+  padding: 10px 0;
 }
 
 .sidebar-menu .el-menu-item {
-  color: var(--text-color);
-  border-bottom: 1px solid var(--border-color);
+  height: 40px;
+  line-height: 56px;
+  color: var(--sidebar-text);
+  border-bottom: none;
+  margin: 4px 10px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .sidebar-menu .el-menu-item:hover {
-  background-color: var(--hover-bg);
+  background-color: var(--sidebar-item-hover);
+  color: var(--sidebar-text-active);
 }
 
 .sidebar-menu .el-menu-item.is-active {
-  background-color: var(--primary-color);
-  color: #ffffff;
+  background-color:#3c97f4; /* 浅蓝色底色 */
+  color: var(--sidebar-text-active);
+  font-weight: 500;
+  box-shadow: 0 4px 10px rgba(126, 87, 194, 0.3);
+}
+
+.sidebar-menu .el-menu-item .el-icon {
+  margin-right: 12px;
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-menu .el-menu-item:hover .el-icon {
+  transform: translateX(2px);
 }
 
 /* 主容器样式 */
@@ -349,7 +434,7 @@ watch(route, () => {
 .header {
   height: 60px;
   background-color: var(--header-bg);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 2px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: space-between;
