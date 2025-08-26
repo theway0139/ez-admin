@@ -1,5 +1,5 @@
 <template>
-  <div id="app" :class="{ 'dark-mode': isDarkMode, 'login-page': isLoginPage }">
+  <div id="app" :class="{ 'login-page': isLoginPage }">
     <!-- 侧边栏 -->
     <aside 
       v-if="!isLoginPage"
@@ -82,13 +82,7 @@
             <el-icon><FullScreen /></el-icon>
           </el-button>
           
-          <el-button
-            type="text"
-            class="action-btn"
-            @click="toggleDarkMode"
-          >
-            <el-icon><Moon v-if="!isDarkMode" /><Sunny v-else /></el-icon>
-          </el-button>
+
           
           <el-badge :value="3" class="notification-badge">
             <el-button
@@ -145,8 +139,6 @@ import {
   Setting,
   Expand,
   FullScreen,
-  Moon,
-  Sunny,
   Bell,
   ArrowDown,
   Document,
@@ -157,7 +149,6 @@ import { ElMessage } from 'element-plus'
 
 // 响应式状态
 const isCollapsed = ref(false)
-const isDarkMode = ref(false)
 const isMobile = ref(false)
 
 // 路由相关
@@ -194,11 +185,7 @@ const toggleSidebar = () => {
   }
 }
 
-const toggleDarkMode = () => {
-  isDarkMode.value = !isDarkMode.value
-  document.documentElement.classList.toggle('dark-mode', isDarkMode.value)
-  localStorage.setItem('darkMode', isDarkMode.value.toString())
-}
+
 
 const toggleFullscreen = () => {
   if (!document.fullscreenElement) {
@@ -242,13 +229,6 @@ const handleResize = () => {
 
 // 生命周期
 onMounted(() => {
-  // 恢复暗黑模式设置
-  const savedDarkMode = localStorage.getItem('darkMode')
-  if (savedDarkMode) {
-    isDarkMode.value = savedDarkMode === 'true'
-    document.documentElement.classList.toggle('dark-mode', isDarkMode.value)
-  }
-  
   // 初始化响应式
   handleResize()
   window.addEventListener('resize', handleResize)
@@ -283,20 +263,7 @@ watch(route, () => {
   --hover-bg: #f5f7fa;
 }
 
-.dark-mode {
-  --primary-color: #7e57c2;
-  --primary-light: #b085f5;
-  --primary-dark: #4d2c91;
-  --sidebar-bg: #1a1d2d;
-  --sidebar-item-hover: #252836;
-  --sidebar-item-active: #7e57c2;
-  --sidebar-text: #a0a3bd;
-  --sidebar-text-active: #ffffff;
-  --header-bg: #252836;
-  --text-color: #f9fafb;
-  --border-color: rgba(75, 85, 99, 0.2);
-  --hover-bg: #2e3347;
-}
+
 
 #app {
   display: flex;
@@ -307,9 +274,7 @@ watch(route, () => {
   overflow: hidden;
 }
 
-.dark-mode #app {
-  background-color: #111827;
-}
+
 
 /* 登录页面全屏样式 */
 .login-page {
@@ -498,9 +463,7 @@ watch(route, () => {
   min-height: 0;
 }
 
-.dark-mode .main-content {
-  background-color: #111827;
-}
+
 
 /* 过渡动画 */
 .fade-enter-active,
@@ -551,26 +514,5 @@ watch(route, () => {
   }
 }
 
-/* 暗黑模式适配 */
-.dark-mode .sidebar {
-  background-color: var(--sidebar-bg);
-}
 
-.dark-mode .header {
-  background-color: var(--header-bg);
-  border-bottom-color: var(--border-color);
-}
-
-.dark-mode .el-menu-item {
-  color: var(--text-color);
-}
-
-.dark-mode .el-menu-item:hover {
-  background-color: var(--hover-bg);
-}
-
-.dark-mode .el-menu-item.is-active {
-  background-color: var(--primary-color);
-  color: #ffffff;
-}
 </style>
