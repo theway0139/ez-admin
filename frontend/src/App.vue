@@ -50,6 +50,31 @@
           <el-icon><Document /></el-icon>
           <template #title>日志信息</template>
         </el-menu-item>
+        
+        <el-menu-item index="/video-playback">
+          <el-icon><VideoPlay /></el-icon>
+          <template #title>录像回放</template>
+        </el-menu-item>
+        
+        <el-menu-item index="/real-time-monitoring">
+          <el-icon><Monitor /></el-icon>
+          <template #title>实时监控</template>
+        </el-menu-item>
+        
+        <el-menu-item index="/event-management">
+          <el-icon><Warning /></el-icon>
+          <template #title>事件管理</template>
+        </el-menu-item>
+        
+        <el-menu-item index="/performance-monitoring">
+          <el-icon><TrendCharts /></el-icon>
+          <template #title>性能监控</template>
+        </el-menu-item>
+        
+        <el-menu-item index="/data-analysis">
+          <el-icon><DataAnalysis /></el-icon>
+          <template #title>数据分析</template>
+        </el-menu-item>
       </el-menu>
     </aside>
 
@@ -143,7 +168,12 @@ import {
   ArrowDown,
   Document,
   Avatar,
-  Memo
+  Memo,
+  Monitor,
+  Warning,
+  VideoPlay,
+  TrendCharts,
+  DataAnalysis
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
@@ -166,7 +196,13 @@ const breadcrumbs = computed(() => {
     '/robots': '机器人管理',
     '/tasks': '任务调度',
     '/users': '用户管理',
-    '/settings': '系统设置'
+    '/settings': '系统设置',
+    '/logs': '日志信息',
+    '/video-playback': '录像回放',
+    '/real-time-monitoring': '实时监控',
+    '/event-management': '事件管理',
+    '/performance-monitoring': '性能监控',
+    '/data-analysis': '数据分析'
   }
   
   const currentPath = route.path

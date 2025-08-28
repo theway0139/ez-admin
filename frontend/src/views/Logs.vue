@@ -208,7 +208,6 @@ onMounted(() => {
 
 <style scoped>
 .logs-container {
-  padding: 20px;
 }
 
 .page-title {

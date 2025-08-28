@@ -45,6 +45,26 @@ const routes = [
     name: 'VideoPlayback',
     component: () => import('../views/VideoPlayback.vue')
   },
+  {
+    path: '/real-time-monitoring',
+    name: 'RealTimeMonitoring',
+    component: () => import('../views/RealTimeMonitoring.vue')
+  },
+  {
+    path: '/event-management',
+    name: 'EventManagement',
+    component: () => import('../views/EventManagement.vue')
+  },
+  {
+    path: '/performance-monitoring',
+    name: 'PerformanceMonitoring',
+    component: () => import('../views/PerformanceMonitoring.vue')
+  },
+  {
+    path: '/data-analysis',
+    name: 'DataAnalysis',
+    component: () => import('../views/DataAnalysis.vue')
+  },
 ]
 
 const router = createRouter({
