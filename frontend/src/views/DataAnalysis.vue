@@ -113,6 +113,63 @@
         </div>
         <div class="chart-content" ref="completionRateChartRef"></div>
       </div>
+      
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3 class="chart-title">资源使用分布</h3>
+        </div>
+        <div class="chart-content" ref="resourceDistributionChartRef"></div>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3 class="chart-title">事件分析</h3>
+        </div>
+        <div class="chart-content" ref="eventAnalysisChartRef"></div>
+      </div>
+    </div>
+    
+    <!-- 分析报告列表 -->
+    <div class="report-list-section">
+      <div class="section-header">
+        <h2 class="section-title">分析报告列表</h2>
+      </div>
+      <div class="report-table-container">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>报告名称</th>
+              <th>生成时间</th>
+              <th>时间范围</th>
+              <th>分析类型</th>
+              <th>数据量</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(report, index) in reportList" :key="index">
+              <td>{{ report.name }}</td>
+              <td>{{ report.createdAt }}</td>
+              <td>{{ report.timeRange }}</td>
+              <td>
+                <span class="analysis-type" :class="report.typeClass">{{ report.type }}</span>
+              </td>
+              <td>{{ report.dataSize }}</td>
+              <td class="action-buttons">
+                <button class="action-btn view-btn" @click="viewReport(report.id)">
+                  <i class="view-icon">👁️</i> 查看
+                </button>
+                <button class="action-btn export-btn" @click="exportReport(report.id)">
+                  <i class="export-icon">⬇️</i> 导出
+                </button>
+                <button class="action-btn delete-btn" @click="deleteReport(report.id)">
+                  <i class="delete-icon">🗑️</i> 删除
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>
@@ -120,13 +177,58 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 // 图表引用
-const performanceChartRef = ref(null)
-const completionRateChartRef = ref(null)
-let performanceChart = null
-let completionRateChart = null
+const performanceChartRef = ref(null);
+const completionRateChartRef = ref(null);
+const resourceDistributionChartRef = ref(null);
+const eventAnalysisChartRef = ref(null);
 
+let performanceChart = null;
+let completionRateChart = null;
+let resourceDistributionChart = null;
+let eventAnalysisChart = null;
+
+// 分析报告列表数据
+const reportList = ref([
+  {
+    id: 1,
+    name: '机器人性能趋势报告',
+    createdAt: '2024-01-15 14:30',
+    timeRange: '2024-01-08 ~ 2024-01-15',
+    type: '性能分析',
+    typeClass: 'performance-type',
+    dataSize: '12500 条数据'
+  },
+  {
+    id: 2,
+    name: '任务执行分析',
+    createdAt: '2024-01-14 09:15',
+    timeRange: '2024-01-01 ~ 2024-01-14',
+    type: '任务分析',
+    typeClass: 'task-type',
+    dataSize: '8900 条数据'
+  },
+  {
+    id: 3,
+    name: '资源使用月报',
+    createdAt: '2024-01-01 08:00',
+    timeRange: '2023-12-01 ~ 2023-12-31',
+    type: '资源分析',
+    typeClass: 'resource-type',
+    dataSize: '35600 条数据'
+  },
+  {
+    id: 4,
+    name: '事件分析报告',
+    createdAt: '2024-01-13 16:45',
+    timeRange: '2024-01-10 ~ 2024-01-13',
+    type: '事件分析',
+    typeClass: 'event-type',
+    dataSize: '4800 条数据'
+  }
+]);
 // 时间范围选项
 const timeRangeOptions = [
   { label: '24小时', value: '24h' },
@@ -154,11 +256,53 @@ const completionRateData = {
   values: [85, 78, 90, 93, 88, 95, 97]
 }
 
+// 资源使用分布数据
+const resourceDistributionData = [
+  { name: 'CPU', value: 25 },
+  { name: '内存', value: 30 },
+  { name: '存储', value: 20 },
+  { name: '网络', value: 15 },
+  { name: '其他', value: 10 }
+]
+
+// 事件分析数据
+const eventAnalysisData = {
+  days: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+  values: [12, 19, 8, 15, 7, 10, 14]
+}
+
 // 方法
 const selectTimeRange = (range) => {
   selectedTimeRange.value = range
   // 这里可以添加根据时间范围更新数据的逻辑
   updateCharts()
+}
+
+// 报告操作功能
+const viewReport = (id) => {
+  console.log('查看报告:', id);
+  ElMessage.success(`正在查看报告 #${id}`);
+  // 实际应用中可以跳转到报告详情页或打开预览弹窗
+};
+
+const exportReport = (id) => {
+  console.log('导出报告:', id);
+  ElMessage.success(`报告 #${id} 导出成功`);
+  // 实际应用中可以触发文件下载
+};
+
+const deleteReport = (id) => {
+  ElMessageBox.confirm('确定要删除这份报告吗？', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    console.log('删除报告:', id);
+    reportList.value = reportList.value.filter(report => report.id !== id);
+    ElMessage.success('删除成功');
+  }).catch(() => {
+    ElMessage.info('已取消删除');
+  });
 }
 
 const initPerformanceChart = () => {
@@ -321,6 +465,140 @@ const initCompletionRateChart = () => {
   completionRateChart.setOption(option)
 }
 
+const initResourceDistributionChart = () => {
+  if (!resourceDistributionChartRef.value) return
+  
+  resourceDistributionChart = echarts.init(resourceDistributionChartRef.value)
+  const option = {
+    tooltip: {
+      trigger: 'item',
+      formatter: '{a} <br/>{b}: {c} ({d}%)'
+    },
+    legend: {
+      orient: 'horizontal',
+      top: 'top',
+      data: resourceDistributionData.map(item => item.name),
+      textStyle: {
+        color: '#666'
+      }
+    },
+    color: ['#b39ddb', '#9fa8da', '#90caf9', '#81d4fa', '#80deea'],
+    series: [
+      {
+        name: '资源使用',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        avoidLabelOverlap: false,
+        itemStyle: {
+          borderRadius: 10,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        label: {
+          show: false,
+          position: 'center'
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: '14',
+            fontWeight: 'bold'
+          }
+        },
+        labelLine: {
+          show: false
+        },
+        data: resourceDistributionData
+      }
+    ]
+  }
+  resourceDistributionChart.setOption(option)
+}
+
+const initEventAnalysisChart = () => {
+  if (!eventAnalysisChartRef.value) return
+  
+  eventAnalysisChart = echarts.init(eventAnalysisChartRef.value)
+  const option = {
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: eventAnalysisData.days,
+      axisLine: {
+        lineStyle: {
+          color: '#e0e0e0'
+        }
+      },
+      axisLabel: {
+        color: '#666'
+      }
+    },
+    yAxis: {
+      type: 'value',
+      axisLine: {
+        lineStyle: {
+          color: '#e0e0e0'
+        }
+      },
+      axisLabel: {
+        color: '#666'
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#f0f0f0'
+        }
+      }
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: '{b}: {c} 事件'
+    },
+    series: [
+      {
+        name: '事件统计',
+        type: 'line',
+        stack: 'Total',
+        smooth: true,
+        lineStyle: {
+          width: 0
+        },
+        showSymbol: true,
+        areaStyle: {
+          opacity: 0.8,
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              {
+                offset: 0,
+                color: 'rgba(255, 99, 132, 0.8)'
+              },
+              {
+                offset: 1,
+                color: 'rgba(255, 99, 132, 0.1)'
+              }
+            ]
+          }
+        },
+        emphasis: {
+          focus: 'series'
+        },
+        data: eventAnalysisData.values
+      }
+    ]
+  }
+  eventAnalysisChart.setOption(option)
+}
+
 const updateCharts = () => {
   // 根据时间范围更新图表数据
   // 这里可以添加实际的数据更新逻辑
@@ -339,6 +617,14 @@ const updateCharts = () => {
       }]
     })
   }
+  
+  if (eventAnalysisChart) {
+    eventAnalysisChart.setOption({
+      series: [{
+        data: eventAnalysisData.values
+      }]
+    })
+  }
 }
 
 // 生命周期钩子
@@ -346,6 +632,8 @@ onMounted(() => {
   nextTick(() => {
     initPerformanceChart()
     initCompletionRateChart()
+    initResourceDistributionChart()
+    initEventAnalysisChart()
     
     // 窗口大小变化时重新调整图表大小
     window.addEventListener('resize', handleResize)
@@ -359,6 +647,12 @@ onUnmounted(() => {
   if (completionRateChart) {
     completionRateChart.dispose()
   }
+  if (resourceDistributionChart) {
+    resourceDistributionChart.dispose()
+  }
+  if (eventAnalysisChart) {
+    eventAnalysisChart.dispose()
+  }
   window.removeEventListener('resize', handleResize)
 })
 
@@ -368,6 +662,12 @@ const handleResize = () => {
   }
   if (completionRateChart) {
     completionRateChart.resize()
+  }
+  if (resourceDistributionChart) {
+    resourceDistributionChart.resize()
+  }
+  if (eventAnalysisChart) {
+    eventAnalysisChart.resize()
   }
 }
 </script>
@@ -577,9 +877,116 @@ const handleResize = () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
+  margin-bottom: 24px;
 }
 
-.chart-container {
+/* 报告列表样式 */
+.report-list-section {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.section-header {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ebeef5;
+  padding-bottom: 10px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0;
+}
+
+.report-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.report-table th,
+.report-table td {
+  padding: 12px 8px;
+  text-align: left;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.report-table th {
+  font-weight: 600;
+  color: #606266;
+  background-color: #f5f7fa;
+}
+
+.report-table tr:hover {
+  background-color: #f5f7fa;
+}
+
+.analysis-type {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #fff;
+}
+
+.performance-type {
+  background-color: #409eff;
+}
+
+.task-type {
+  background-color: #67c23a;
+}
+
+.resource-type {
+  background-color: #9254de;
+}
+
+.event-type {
+  background-color: #ff9f43;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.view-btn {
+  color: #409eff;
+}
+
+.export-btn {
+  color: #67c23a;
+}
+
+.delete-btn {
+  color: #f56c6c;
+}
+
+.action-btn:hover {
+  background-color: #ecf5ff;
+}.chart-container {
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
