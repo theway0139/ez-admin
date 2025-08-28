@@ -21,6 +21,9 @@
         router
         class="sidebar-menu"
       >
+        <!-- 主菜单分组 -->
+        <div class="menu-group-title">主菜单</div>
+        
         <el-menu-item index="/dashboard">
           <el-icon><DataBoard /></el-icon>
           <template #title>仪表盘</template>
@@ -36,6 +39,34 @@
           <template #title>任务调度</template>
         </el-menu-item>
         
+        <el-menu-item index="/real-time-monitoring">
+          <el-icon><Monitor /></el-icon>
+          <template #title>实时监控</template>
+        </el-menu-item>
+        
+        <el-menu-item index="/event-management">
+          <el-icon><Warning /></el-icon>
+          <template #title>事件管理</template>
+        </el-menu-item>
+        
+        <el-menu-item index="/video-playback">
+          <el-icon><VideoPlay /></el-icon>
+          <template #title>录像回放</template>
+        </el-menu-item>
+        
+        <el-menu-item index="/performance-monitoring">
+          <el-icon><TrendCharts /></el-icon>
+          <template #title>性能监控</template>
+        </el-menu-item>
+        
+        <el-menu-item index="/data-analysis">
+          <el-icon><DataLine /></el-icon>
+          <template #title>数据分析</template>
+        </el-menu-item>
+        
+        <!-- 系统管理分组 -->
+        <div class="menu-group-title">系统管理</div>
+        
         <el-menu-item index="/users">
           <el-icon><User /></el-icon>
           <template #title>用户管理</template>
@@ -49,31 +80,6 @@
         <el-menu-item index="/logs">
           <el-icon><Document /></el-icon>
           <template #title>日志信息</template>
-        </el-menu-item>
-        
-        <el-menu-item index="/video-playback">
-          <el-icon><VideoPlay /></el-icon>
-          <template #title>录像回放</template>
-        </el-menu-item>
-        
-        <el-menu-item index="/real-time-monitoring">
-          <el-icon><Monitor /></el-icon>
-          <template #title>实时监控</template>
-        </el-menu-item>
-        
-        <el-menu-item index="/event-management">
-          <el-icon><Warning /></el-icon>
-          <template #title>事件管理</template>
-        </el-menu-item>
-        
-        <el-menu-item index="/performance-monitoring">
-          <el-icon><TrendCharts /></el-icon>
-          <template #title>性能监控</template>
-        </el-menu-item>
-        
-        <el-menu-item index="/data-analysis">
-          <el-icon><DataAnalysis /></el-icon>
-          <template #title>数据分析</template>
         </el-menu-item>
       </el-menu>
     </aside>
@@ -173,7 +179,7 @@ import {
   Warning,
   VideoPlay,
   TrendCharts,
-  DataAnalysis
+  DataLine
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
@@ -200,9 +206,7 @@ const breadcrumbs = computed(() => {
     '/logs': '日志信息',
     '/video-playback': '录像回放',
     '/real-time-monitoring': '实时监控',
-    '/event-management': '事件管理',
-    '/performance-monitoring': '性能监控',
-    '/data-analysis': '数据分析'
+    '/event-management': '事件管理'
   }
   
   const currentPath = route.path
@@ -419,6 +423,16 @@ watch(route, () => {
 
 .sidebar-menu .el-menu-item:hover .el-icon {
   transform: translateX(2px);
+}
+
+.menu-group-title {
+  padding: 10px 20px;
+  color: #909399;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 10px;
 }
 
 /* 主容器样式 */
