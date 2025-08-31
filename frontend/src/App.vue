@@ -66,7 +66,7 @@
         
         <!-- 系统管理分组 -->
         <div class="menu-group-title">系统管理</div>
-        
+        <!--
         <el-menu-item index="/users">
           <el-icon><User /></el-icon>
           <template #title>用户管理</template>
@@ -81,6 +81,7 @@
           <el-icon><Document /></el-icon>
           <template #title>日志信息</template>
         </el-menu-item>
+        -->
       </el-menu>
     </aside>
 
