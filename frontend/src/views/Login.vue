@@ -133,8 +133,8 @@ const router = useRouter()
 
 // 响应式数据
 const form = reactive({
-  username: '',
-  password: '',
+  username: 'admin',
+  password: '123456',
   rememberMe: false
 })
 
