@@ -10,6 +10,7 @@ lerna-debug.log*
 open-github.bat
 settings.py
 *.bat
+models
 
 node_modules
 dist
