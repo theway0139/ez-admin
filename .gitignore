@@ -11,6 +11,7 @@ open-github.bat
 settings.py
 *.bat
 models
+pic
 
 node_modules
 dist
