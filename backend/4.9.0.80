@@ -1,0 +1,5 @@
+Collecting opencv-python-headless
+  Downloading opencv_python_headless-4.12.0.88-cp37-abi3-win_amd64.whl.metadata (20 kB)
+Requirement already satisfied: numpy<2.3.0,>=2 in d:\users\theway\anaconda3\envs\py312\lib\site-packages (from opencv-python-headless) (2.2.6)
+Downloading opencv_python_headless-4.12.0.88-cp37-abi3-win_amd64.whl (38.9 MB)
+   -----                                    5.5/38.9 MB 226.1 kB/s eta 0:02:28
