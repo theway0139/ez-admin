@@ -348,52 +348,31 @@ def process_cross_image(image_data):
     if not is_models_loaded():
         return {"error": "模型未成功加载"}
     
-    # 获取人物检测模型和翻越检测模型
-    person_model = get_person_model()
+    # 获取翻越检测模型
     cross_model = get_cross_model()
     
     # 转换为OpenCV格式
     nparr = np.frombuffer(image_data, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    img_height, img_width = img.shape[:2]
     
-    # 人物检测
-    person_results = person_model(img, classes=[0])  # 0是COCO数据集中的人类类别
+    # 直接进行翻越检测
+    cross_results = cross_model(img)
     
     detections = []
-    for result in person_results:
+    for result in cross_results:
         boxes = result.boxes
         for box in boxes:
             # 获取边界框坐标
             x1, y1, x2, y2 = box.xyxy[0].tolist()
+            conf = box.conf[0].item()
             
-            # 计算人物框是否超出30%区域（这里假设是图像的上部30%）
-            # 如果人物框的上边缘y1小于图像高度的30%，则认为可能存在翻越行为
-            threshold_y = img_height * 0.3
-            if y1 < threshold_y:
-                # 扩展边界框
-                expanded_bbox = expand_bbox([x1, y1, x2, y2], 0.2, img_width, img_height)
-                ex1, ey1, ex2, ey2 = [int(coord) for coord in expanded_bbox]
-                
-                # 裁剪人物区域
-                person_crop = img[ey1:ey2, ex1:ex2]
-                
-                # 翻越检测
-                cross_results = cross_model(person_crop)
-                
-                # 分析翻越结果
-                for c_result in cross_results:
-                    c_boxes = c_result.boxes
-                    for c_box in c_boxes:
-                        conf = c_box.conf[0].item()
-                        
-                        # 只有当置信度大于0.5时才记录
-                        if conf > 0.5:
-                            detections.append({
-                                "type": "cross",
-                                "confidence": conf,
-                                "bbox": [int(x1), int(y1), int(x2), int(y2)]
-                            })
+            # 只有当置信度大于0.5时才记录
+            if conf > 0.5:
+                detections.append({
+                    "type": "crossover",
+                    "confidence": conf,
+                    "bbox": [int(x1), int(y1), int(x2), int(y2)]
+                })
     
     return {
         "has_cross": len(detections) > 0,
