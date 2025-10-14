@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import tempfile
 import os
-from .models_loader import get_person_model, get_behavior_model, is_models_loaded
+from .models_loader import get_person_model, get_behavior_model, get_rubbish_model, get_firesmoke_model, get_cross_model, is_models_loaded
 
 # 扩展边界框函数
 def expand_bbox(bbox, expand_ratio=0.2, img_width=None, img_height=None):
@@ -131,6 +131,330 @@ def process_video(video_data, sample_interval=30):
             "total_frames": frame_count,
             "warning_frames": len(all_warnings),
             "warnings": all_warnings
+        }
+    
+    except Exception as e:
+        # 确保清理临时文件
+        if os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
+        return {"error": str(e)}
+
+# 处理垃圾检测图像
+def process_rubbish_image(image_data):
+    """处理单张图像，检测垃圾物品"""
+    if not is_models_loaded():
+        return {"error": "模型未成功加载"}
+    
+    # 获取垃圾检测模型
+    rubbish_model = get_rubbish_model()
+    
+    # 转换为OpenCV格式
+    nparr = np.frombuffer(image_data, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    # 垃圾检测
+    rubbish_results = rubbish_model(img)
+    
+    detections = []
+    for result in rubbish_results:
+        boxes = result.boxes
+        for box in boxes:
+            # 获取边界框坐标
+            x1, y1, x2, y2 = box.xyxy[0].tolist()
+            conf = box.conf[0].item()
+            
+            # 只有当置信度大于0.5时才记录
+            if conf > 0.5:
+                detections.append({
+                    "type": "rubbish",
+                    "confidence": conf,
+                    "bbox": [int(x1), int(y1), int(x2), int(y2)]
+                })
+    
+    return {
+        "has_rubbish": len(detections) > 0,
+        "detections": detections,
+        "count": len(detections)
+    }
+
+# 处理垃圾检测视频
+def process_rubbish_video(video_data, sample_interval=30):
+    """处理视频文件，检测垃圾物品"""
+    if not is_models_loaded():
+        return {"error": "模型未成功加载"}
+    
+    # 创建临时文件保存视频数据
+    with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_file:
+        temp_file.write(video_data)
+        temp_file_path = temp_file.name
+    
+    try:
+        # 打开视频文件
+        cap = cv2.VideoCapture(temp_file_path)
+        if not cap.isOpened():
+            return {"error": "无法打开视频文件"}
+        
+        frame_count = 0
+        all_detections = []
+        
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            # 每隔sample_interval帧处理一次
+            if frame_count % sample_interval == 0:
+                # 将帧转换为字节
+                _, buffer = cv2.imencode('.jpg', frame)
+                frame_bytes = buffer.tobytes()
+                
+                # 处理帧
+                result = process_rubbish_image(frame_bytes)
+                if "error" not in result and result["has_rubbish"]:
+                    # 记录帧号和检测结果
+                    frame_detections = {
+                        "frame": frame_count,
+                        "time": frame_count / cap.get(cv2.CAP_PROP_FPS),
+                        "detections": result["detections"]
+                    }
+                    all_detections.append(frame_detections)
+            
+            frame_count += 1
+        
+        cap.release()
+        
+        # 清理临时文件
+        os.unlink(temp_file_path)
+        
+        return {
+            "has_rubbish": len(all_detections) > 0,
+            "total_frames": frame_count,
+            "detection_frames": len(all_detections),
+            "detections": all_detections
+        }
+    
+    except Exception as e:
+        # 确保清理临时文件
+        if os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
+        return {"error": str(e)}
+
+# 处理烟火检测图像
+def process_firesmoke_image(image_data):
+    """处理单张图像，检测烟火"""
+    if not is_models_loaded():
+        return {"error": "模型未成功加载"}
+    
+    # 获取烟火检测模型
+    firesmoke_model = get_firesmoke_model()
+    
+    # 转换为OpenCV格式
+    nparr = np.frombuffer(image_data, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    # 烟火检测
+    firesmoke_results = firesmoke_model(img)
+    
+    detections = []
+    for result in firesmoke_results:
+        boxes = result.boxes
+        for box in boxes:
+            # 获取边界框坐标
+            x1, y1, x2, y2 = box.xyxy[0].tolist()
+            conf = box.conf[0].item()
+            cls_id = int(box.cls[0].item())
+            
+            # 只有当置信度大于0.5时才记录
+            if conf > 0.5:
+                # 类别0是fire(火), 类别1是smoke(烟)
+                detection_type = "fire" if cls_id == 0 else "smoke"
+                detections.append({
+                    "type": detection_type,
+                    "confidence": conf,
+                    "bbox": [int(x1), int(y1), int(x2), int(y2)]
+                })
+    
+    return {
+        "has_firesmoke": len(detections) > 0,
+        "detections": detections,
+        "count": len(detections)
+    }
+
+# 处理烟火检测视频
+def process_firesmoke_video(video_data, sample_interval=30):
+    """处理视频文件，检测烟火"""
+    if not is_models_loaded():
+        return {"error": "模型未成功加载"}
+    
+    # 创建临时文件保存视频数据
+    with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_file:
+        temp_file.write(video_data)
+        temp_file_path = temp_file.name
+    
+    try:
+        # 打开视频文件
+        cap = cv2.VideoCapture(temp_file_path)
+        if not cap.isOpened():
+            return {"error": "无法打开视频文件"}
+        
+        frame_count = 0
+        all_detections = []
+        
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            # 每隔sample_interval帧处理一次
+            if frame_count % sample_interval == 0:
+                # 将帧转换为字节
+                _, buffer = cv2.imencode('.jpg', frame)
+                frame_bytes = buffer.tobytes()
+                
+                # 处理帧
+                result = process_firesmoke_image(frame_bytes)
+                if "error" not in result and result["has_firesmoke"]:
+                    # 记录帧号和检测结果
+                    frame_detections = {
+                        "frame": frame_count,
+                        "time": frame_count / cap.get(cv2.CAP_PROP_FPS),
+                        "detections": result["detections"]
+                    }
+                    all_detections.append(frame_detections)
+            
+            frame_count += 1
+        
+        cap.release()
+        
+        # 清理临时文件
+        os.unlink(temp_file_path)
+        
+        return {
+            "has_firesmoke": len(all_detections) > 0,
+            "total_frames": frame_count,
+            "detection_frames": len(all_detections),
+            "detections": all_detections
+        }
+    
+    except Exception as e:
+        # 确保清理临时文件
+        if os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
+        return {"error": str(e)}
+
+# 处理翻越检测图像
+def process_cross_image(image_data):
+    """处理单张图像，检测翻越行为"""
+    if not is_models_loaded():
+        return {"error": "模型未成功加载"}
+    
+    # 获取人物检测模型和翻越检测模型
+    person_model = get_person_model()
+    cross_model = get_cross_model()
+    
+    # 转换为OpenCV格式
+    nparr = np.frombuffer(image_data, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    img_height, img_width = img.shape[:2]
+    
+    # 人物检测
+    person_results = person_model(img, classes=[0])  # 0是COCO数据集中的人类类别
+    
+    detections = []
+    for result in person_results:
+        boxes = result.boxes
+        for box in boxes:
+            # 获取边界框坐标
+            x1, y1, x2, y2 = box.xyxy[0].tolist()
+            
+            # 计算人物框是否超出30%区域（这里假设是图像的上部30%）
+            # 如果人物框的上边缘y1小于图像高度的30%，则认为可能存在翻越行为
+            threshold_y = img_height * 0.3
+            if y1 < threshold_y:
+                # 扩展边界框
+                expanded_bbox = expand_bbox([x1, y1, x2, y2], 0.2, img_width, img_height)
+                ex1, ey1, ex2, ey2 = [int(coord) for coord in expanded_bbox]
+                
+                # 裁剪人物区域
+                person_crop = img[ey1:ey2, ex1:ex2]
+                
+                # 翻越检测
+                cross_results = cross_model(person_crop)
+                
+                # 分析翻越结果
+                for c_result in cross_results:
+                    c_boxes = c_result.boxes
+                    for c_box in c_boxes:
+                        conf = c_box.conf[0].item()
+                        
+                        # 只有当置信度大于0.5时才记录
+                        if conf > 0.5:
+                            detections.append({
+                                "type": "cross",
+                                "confidence": conf,
+                                "bbox": [int(x1), int(y1), int(x2), int(y2)]
+                            })
+    
+    return {
+        "has_cross": len(detections) > 0,
+        "detections": detections,
+        "count": len(detections)
+    }
+
+# 处理翻越检测视频
+def process_cross_video(video_data, sample_interval=30):
+    """处理视频文件，检测翻越行为"""
+    if not is_models_loaded():
+        return {"error": "模型未成功加载"}
+    
+    # 创建临时文件保存视频数据
+    with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_file:
+        temp_file.write(video_data)
+        temp_file_path = temp_file.name
+    
+    try:
+        # 打开视频文件
+        cap = cv2.VideoCapture(temp_file_path)
+        if not cap.isOpened():
+            return {"error": "无法打开视频文件"}
+        
+        frame_count = 0
+        all_detections = []
+        
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            # 每隔sample_interval帧处理一次
+            if frame_count % sample_interval == 0:
+                # 将帧转换为字节
+                _, buffer = cv2.imencode('.jpg', frame)
+                frame_bytes = buffer.tobytes()
+                
+                # 处理帧
+                result = process_cross_image(frame_bytes)
+                if "error" not in result and result["has_cross"]:
+                    # 记录帧号和检测结果
+                    frame_detections = {
+                        "frame": frame_count,
+                        "time": frame_count / cap.get(cv2.CAP_PROP_FPS),
+                        "detections": result["detections"]
+                    }
+                    all_detections.append(frame_detections)
+            
+            frame_count += 1
+        
+        cap.release()
+        
+        # 清理临时文件
+        os.unlink(temp_file_path)
+        
+        return {
+            "has_cross": len(all_detections) > 0,
+            "total_frames": frame_count,
+            "detection_frames": len(all_detections),
+            "detections": all_detections
         }
     
     except Exception as e:
