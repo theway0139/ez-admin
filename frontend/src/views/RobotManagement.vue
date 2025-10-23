@@ -3,12 +3,12 @@
     <!-- 页面头部 -->
     <div class="page-header">
       <div class="header-left">
-        <h1 class="page-title">机器人管理</h1>
+        <h1 class="page-title">{{ $t('robots.title') }}</h1>
       </div>
       <div class="header-right">
         <el-input
           v-model="searchKeyword"
-          placeholder="搜索机器人..."
+          :placeholder="$t('common.search') + $t('robots.title') + '...'"
           class="search-input"
           clearable
         >
@@ -22,28 +22,28 @@
     <!-- 筛选器区域 -->
     <div class="filter-section">
       <div class="filter-item">
-        <label class="filter-label">机器人类型</label>
-        <el-select v-model="selectedType" placeholder="全部类型" clearable>
-          <el-option label="全部类型" value="" />
-          <el-option label="探索者" value="探索者" />
-          <el-option label="守护者" value="守护者" />
-          <el-option label="服务者" value="服务者" />
-          <el-option label="运输者" value="运输者" />
+        <label class="filter-label">{{ $t('robots.robotType') }}</label>
+        <el-select v-model="selectedType" :placeholder="$t('robots.allTypes')" clearable>
+          <el-option :label="$t('robots.allTypes')" value="" />
+          <el-option :label="$t('robots.explorer')" value="探索者" />
+          <el-option :label="$t('robots.guardian')" value="守护者" />
+          <el-option :label="$t('robots.service')" value="服务者" />
+          <el-option :label="$t('robots.transport')" value="运输者" />
         </el-select>
       </div>
       <div class="filter-item">
-        <label class="filter-label">状态</label>
-        <el-select v-model="selectedStatus" placeholder="全部状态" clearable>
-          <el-option label="全部状态" value="" />
-          <el-option label="在线" value="在线" />
-          <el-option label="低电量" value="低电量" />
-          <el-option label="异常" value="异常" />
+        <label class="filter-label">{{ $t('common.status') }}</label>
+        <el-select v-model="selectedStatus" :placeholder="$t('robots.allStatus')" clearable>
+          <el-option :label="$t('robots.allStatus')" value="" />
+          <el-option :label="$t('robots.online')" value="在线" />
+          <el-option :label="$t('robots.lowBattery')" value="低电量" />
+          <el-option :label="$t('robots.abnormal')" value="异常" />
         </el-select>
       </div>
       <div class="filter-item">
-        <label class="filter-label">所在区域</label>
-        <el-select v-model="selectedArea" placeholder="全部区域" clearable>
-          <el-option label="全部区域" value="" />
+        <label class="filter-label">{{ $t('robots.location') }}</label>
+        <el-select v-model="selectedArea" :placeholder="$t('robots.allAreas')" clearable>
+          <el-option :label="$t('robots.allAreas')" value="" />
           <el-option label="A区3楼" value="A区3楼" />
           <el-option label="B区1楼" value="B区1楼" />
           <el-option label="C区5楼" value="C区5楼" />
@@ -60,8 +60,8 @@
         stripe
         @selection-change="handleSelectionChange"
       >
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column label="名称" width="200">
+        <el-table-column prop="id" :label="$t('common.id')" width="80" />
+        <el-table-column :label="$t('common.name')" width="200">
           <template #default="{ row }">
             <div class="robot-name-cell">
               <el-avatar :size="32" :src="row.avatar" class="robot-avatar" />
@@ -72,8 +72,8 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="type" label="类型" width="100" />
-        <el-table-column label="状态" width="100">
+        <el-table-column prop="type" :label="$t('common.type')" width="100" />
+        <el-table-column :label="$t('common.status')" width="100">
           <template #default="{ row }">
             <el-tag
               :type="getStatusType(row.status)"
@@ -83,8 +83,8 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="location" label="位置" width="120" />
-        <el-table-column label="电池" width="150">
+        <el-table-column prop="location" :label="$t('common.location')" width="120" />
+        <el-table-column :label="$t('common.battery')" width="150">
           <template #default="{ row }">
             <div class="battery-cell">
               <el-progress
@@ -97,17 +97,17 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="lastActivity" label="最后活动" width="120" />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column prop="lastActivity" :label="$t('robots.lastActivity')" width="120" />
+        <el-table-column :label="$t('common.actions')" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="viewDetails(row)">
-              详情
+              {{ $t('common.details') }}
             </el-button>
             <el-button type="primary" link size="small" @click="controlRobot(row)">
-              控制
+              {{ $t('common.control') }}
             </el-button>
             <el-button type="primary" link size="small" @click="configRobot(row)">
-              配置
+              {{ $t('common.config') }}
             </el-button>
           </template>
         </el-table-column>
@@ -117,7 +117,7 @@
     <!-- 分页 -->
     <div class="pagination-section">
       <div class="pagination-info">
-        显示 {{ (currentPage - 1) * pageSize + 1 }} 至 {{ Math.min(currentPage * pageSize, totalRobots) }} 条，共 {{ totalRobots }} 条
+        {{ $t('common.showing') }} {{ (currentPage - 1) * pageSize + 1 }} {{ $t('common.to') }} {{ Math.min(currentPage * pageSize, totalRobots) }} {{ $t('common.of') }} {{ totalRobots }} {{ $t('common.records') }}
       </div>
       <el-pagination
         v-model:current-page="currentPage"
@@ -132,7 +132,7 @@
     <!-- 机器人详情弹窗 -->
     <el-dialog
       v-model="detailsVisible"
-      :title="`机器人详情 - ${currentRobot?.id || ''}`"
+      :title="$t('common.details') + ' - ' + (currentRobot?.id || '')"
       width="600px"
       destroy-on-close
       class="robot-details-dialog"
@@ -151,14 +151,14 @@
         
         <div class="details-content">
           <div class="basic-info">
-            <h3>基本信息</h3>
+            <h3>{{ $t('common.basicInfo') }}</h3>
             <div class="info-grid">
               <div class="info-item">
-                <div class="info-label">类型:</div>
+                <div class="info-label">{{ $t('common.type') }}:</div>
                 <div class="info-value">{{ currentRobot.type }}</div>
               </div>
               <div class="info-item">
-                <div class="info-label">状态:</div>
+                <div class="info-label">{{ $t('common.status') }}:</div>
                 <div class="info-value">
                   <el-tag :type="getStatusType(currentRobot.status)" size="small">
                     {{ currentRobot.status }}
@@ -166,49 +166,49 @@
                 </div>
               </div>
               <div class="info-item">
-                <div class="info-label">位置:</div>
+                <div class="info-label">{{ $t('common.location') }}:</div>
                 <div class="info-value">{{ currentRobot.location }}</div>
               </div>
               <div class="info-item">
-                <div class="info-label">最后活动:</div>
+                <div class="info-label">{{ $t('robots.lastActivity') }}:</div>
                 <div class="info-value">{{ currentRobot.lastActivity }}</div>
               </div>
             </div>
           </div>
           
           <div class="status-monitor">
-            <h3>状态监控</h3>
+            <h3>{{ $t('common.statusMonitor') }}</h3>
             <div class="monitor-item">
               <div class="monitor-header">
-                <span>电池电量</span>
+                <span>{{ $t('common.battery') }}</span>
                 <span class="monitor-value">{{ currentRobot.battery }}%</span>
               </div>
-              <el-progress 
-                :percentage="currentRobot.battery" 
+              <el-progress
+                :percentage="currentRobot.battery"
                 :color="getBatteryColor(currentRobot.battery)"
                 :stroke-width="10"
               />
             </div>
-            
+
             <div class="monitor-item">
               <div class="monitor-header">
-                <span>CPU使用率</span>
+                <span>{{ $t('common.cpuUsage') }}</span>
                 <span class="monitor-value">{{ currentRobot.cpuUsage }}%</span>
               </div>
-              <el-progress 
-                :percentage="currentRobot.cpuUsage" 
+              <el-progress
+                :percentage="currentRobot.cpuUsage"
                 :color="'#3b82f6'"
                 :stroke-width="10"
               />
             </div>
-            
+
             <div class="monitor-item">
               <div class="monitor-header">
-                <span>内存使用</span>
+                <span>{{ $t('common.memoryUsage') }}</span>
                 <span class="monitor-value">{{ currentRobot.memoryUsage }}%</span>
               </div>
-              <el-progress 
-                :percentage="currentRobot.memoryUsage" 
+              <el-progress
+                :percentage="currentRobot.memoryUsage"
                 :color="'#8b5cf6'"
                 :stroke-width="10"
               />
@@ -217,7 +217,7 @@
         </div>
         
         <div class="dialog-footer">
-          <el-button @click="detailsVisible = false">关闭</el-button>
+          <el-button @click="detailsVisible = false">{{ $t('common.close') }}</el-button>
         </div>
       </div>
     </el-dialog>
@@ -225,49 +225,54 @@
     <!-- 机器人配置弹窗 -->
     <el-dialog
       v-model="configVisible"
-      :title="`配置机器人 - ${configRobotData?.id || ''}`"
+      :title="$t('common.config') + ' - ' + (configRobotData?.id || '')"
       width="600px"
       destroy-on-close
       class="robot-config-dialog"
     >
       <div v-if="configRobotData" class="robot-config">
         <div class="config-section">
-          <h3 class="section-title">基本配置</h3>
+          <h3 class="section-title">{{ $t('common.basicConfig') }}</h3>
           
           <div class="config-item">
-            <div class="config-label">机器人名称</div>
-            <el-input v-model="configRobotData.name" placeholder="请输入机器人名称" />
+            <div class="config-label">{{ $t('robots.robotName') }}</div>
+            <el-input v-model="configRobotData.name" :placeholder="$t('robots.robotNamePlaceholder')" />
           </div>
-          
+
           <div class="config-item">
-            <div class="config-label">默认速度</div>
-            <el-select v-model="defaultSpeed" placeholder="请选择默认速度" class="full-width">
-              <el-option label="低速" value="low" />
-              <el-option label="中速" value="medium" />
-              <el-option label="高速" value="high" />
+            <div class="config-label">{{ $t('common.version') }}</div>
+            <el-input v-model="configRobotData.version" :placeholder="$t('common.version')" />
+          </div>
+
+          <div class="config-item">
+            <div class="config-label">{{ $t('robots.defaultSpeed') }}</div>
+            <el-select v-model="defaultSpeed" :placeholder="$t('robots.selectDefaultSpeed')" class="full-width">
+              <el-option :label="$t('robots.lowSpeed')" value="low" />
+              <el-option :label="$t('robots.mediumSpeed')" value="medium" />
+              <el-option :label="$t('robots.highSpeed')" value="high" />
             </el-select>
           </div>
-          
+
           <div class="config-item">
-            <div class="config-label">安全模式</div>
-            <el-checkbox v-model="collisionDetection">启用碰撞检测</el-checkbox>
+            <div class="config-label">{{ $t('robots.safetyMode') }}</div>
+            <el-checkbox v-model="collisionDetection">{{ $t('robots.enableCollisionDetection') }}</el-checkbox>
           </div>
         </div>
         
         <div class="config-section">
-          <h3 class="section-title">网络配置</h3>
+          <h3 class="section-title">{{ $t('common.networkConfig') }}</h3>
           
           <div class="config-item">
-            <div class="config-label">IP地址</div>
-            <el-input v-model="ipAddress" placeholder="请输入IP地址" />
+            <div class="config-label">{{ $t('robots.ipAddress') }}</div>
+            <el-input v-model="ipAddress" :placeholder="$t('robots.ipAddressPlaceholder')" />
           </div>
-          
+
           <div class="config-item">
-            <div class="config-label">连接方式</div>
-            <el-select v-model="connectionType" placeholder="请选择连接方式" class="full-width">
-              <el-option label="WiFi" value="wifi" />
-              <el-option label="以太网" value="ethernet" />
-              <el-option label="蓝牙" value="bluetooth" />
+            <div class="config-label">{{ $t('robots.connectionType') }}</div>
+            <el-select v-model="connectionType" :placeholder="$t('robots.selectConnectionType')" class="full-width">
+              <el-option :label="$t('robots.wifi')" value="wifi" />
+              <el-option :label="$t('robots.ethernet')" value="ethernet" />
+              <el-option :label="$t('robots.bluetooth')" value="bluetooth" />
             </el-select>
           </div>
           <div class="config-item">
@@ -281,8 +286,8 @@
         </div>
         
         <div class="dialog-footer">
-          <el-button @click="configVisible = false">取消</el-button>
-          <el-button type="primary" @click="saveConfig">保存配置</el-button>
+          <el-button @click="configVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="saveConfig">{{ $t('common.save') + $t('common.config') }}</el-button>
         </div>
       </div>
     </el-dialog>

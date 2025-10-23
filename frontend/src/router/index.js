@@ -31,6 +31,16 @@ const routes = [
     component: () => import('../views/Logs.vue')
   },
   {
+    path: '/data-backup',
+    name: 'DataBackup',
+    component: () => import('../views/DataBackup.vue')
+  },
+  {
+    path: '/log-audit',
+    name: 'LogAudit',
+    component: () => import('../views/LogAudit.vue')
+  },
+  {
     path: '/robots',
     name: 'RobotManagement',
     component: () => import('../views/RobotManagement.vue')

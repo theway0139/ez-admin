@@ -2,12 +2,12 @@
   <div class="dashboard">
     <div class="page-header">
       <div class="header-left">
-        <h1 class="page-title">仪表盘</h1>
+        <h1 class="page-title">{{ $t('dashboard.title') }}</h1>
       </div>
       <div class="header-actions">
         <el-button type="default" size="default">
           <el-icon><Download /></el-icon>
-          导出数据
+          {{ $t('common.export') + $t('common.data') }}
         </el-button>
       </div>
     </div>
@@ -21,11 +21,11 @@
               <el-icon><Monitor /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-label">在线机器人</div>
+              <div class="stat-label">{{ $t('dashboard.onlineRobots') }}</div>
               <div class="stat-number">24</div>
               <div class="stat-trend positive">
                 <el-icon><ArrowUp /></el-icon>
-                12% vs 上周
+                12% {{ $t('dashboard.vsLastWeek') }}
               </div>
             </div>
           </div>
@@ -51,11 +51,11 @@
               <el-icon><Loading /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-label">执行中任务</div>
+              <div class="stat-label">{{ $t('dashboard.runningTasks') }}</div>
               <div class="stat-number">168</div>
               <div class="stat-trend negative">
                 <el-icon><ArrowDown /></el-icon>
-                3% vs 上周
+                3% {{ $t('dashboard.vsLastWeek') }}
               </div>
             </div>
           </div>
@@ -81,11 +81,11 @@
               <el-icon><CircleCheck /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-label">完成任务数</div>
+              <div class="stat-label">{{ $t('dashboard.completedTasks') }}</div>
               <div class="stat-number">2,876</div>
               <div class="stat-trend positive">
                 <el-icon><ArrowUp /></el-icon>
-                8% vs 上周
+                8% {{ $t('dashboard.vsLastWeek') }}
               </div>
             </div>
           </div>
@@ -111,11 +111,11 @@
               <el-icon><Warning /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-label">异常警报</div>
+              <div class="stat-label">{{ $t('dashboard.alerts') }}</div>
               <div class="stat-number">7</div>
               <div class="stat-trend positive">
                 <el-icon><ArrowDown /></el-icon>
-                15% vs 上周
+                15% {{ $t('dashboard.vsLastWeek') }}
               </div>
             </div>
           </div>
@@ -142,7 +142,7 @@
           <el-card class="chart-card">
             <template #header>
               <div class="card-header">
-                <span>机器人类型分布</span>
+                <span>{{ $t('dashboard.robotTypeDistribution') }}</span>
                 <el-button type="text" size="small">
                   <el-icon><MoreFilled /></el-icon>
                 </el-button>
@@ -191,11 +191,11 @@
           <el-card class="chart-card">
             <template #header>
               <div class="card-header">
-                <span>任务完成情况</span>
+                <span>{{ $t('dashboard.taskCompletion') }}</span>
                 <div class="time-tabs">
-                  <el-button type="text" size="small" :class="{ active: activeTab === 'week' }" @click="activeTab = 'week'">周</el-button>
-                  <el-button type="text" size="small" :class="{ active: activeTab === 'month' }" @click="activeTab = 'month'">月</el-button>
-                  <el-button type="text" size="small" :class="{ active: activeTab === 'year' }" @click="activeTab = 'year'">年</el-button>
+                  <el-button type="text" size="small" :class="{ active: activeTab === 'week' }" @click="activeTab = 'week'">{{ $t('dashboard.week') }}</el-button>
+                  <el-button type="text" size="small" :class="{ active: activeTab === 'month' }" @click="activeTab = 'month'">{{ $t('dashboard.month') }}</el-button>
+                  <el-button type="text" size="small" :class="{ active: activeTab === 'year' }" @click="activeTab = 'year'">{{ $t('dashboard.year') }}</el-button>
                 </div>
               </div>
             </template>
@@ -215,15 +215,15 @@
               <div class="bar-legend">
                 <div class="legend-item">
                   <span class="legend-color" style="background-color: #10b981;"></span>
-                  <span class="legend-text">已完成</span>
-                </div>
-                <div class="legend-item">
-                  <span class="legend-color" style="background-color: #3b82f6;"></span>
-                  <span class="legend-text">进行中</span>
-                </div>
-                <div class="legend-item">
-                  <span class="legend-color" style="background-color: #ef4444;"></span>
-                  <span class="legend-text">已失败</span>
+                  <span class="legend-text">{{ $t('common.completed') }}</span>
+                 </div>
+                 <div class="legend-item">
+                   <span class="legend-color" style="background-color: #3b82f6;"></span>
+                   <span class="legend-text">{{ $t('common.running') }}</span>
+                 </div>
+                 <div class="legend-item">
+                   <span class="legend-color" style="background-color: #ef4444;"></span>
+                   <span class="legend-text">{{ $t('common.failed') }}</span>
                 </div>
               </div>
             </div>
@@ -237,7 +237,7 @@
       <el-card class="map-card">
         <template #header>
           <div class="card-header">
-            <span>机器人分布</span>
+            <span>{{ $t('dashboard.robotDistribution') }}</span>
             <el-button type="text" size="small">
               <el-icon><FullScreen /></el-icon>
             </el-button>
@@ -295,13 +295,13 @@
       <el-card class="robot-list-card">
         <template #header>
           <div class="card-header">
-            <span>在线机器人</span>
+            <span>{{ $t('dashboard.onlineRobots') }}</span>
           </div>
         </template>
         <div class="robot-table-container">
           <el-table :data="robotList" style="width: 100%" stripe>
-            <el-table-column prop="id" label="ID" width="80" />
-            <el-table-column label="名称" width="120">
+            <el-table-column prop="id" :label="$t('common.id')" width="80" />
+            <el-table-column :label="$t('common.name')" width="120">
               <template #default="scope">
                 <div class="robot-name-cell">
                   <el-avatar :size="32" :src="scope.row.avatar" class="robot-avatar" />
@@ -309,16 +309,16 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column prop="type" label="类型" width="100" />
-            <el-table-column label="状态" width="80">
+            <el-table-column prop="type" :label="$t('common.type')" width="100" />
+            <el-table-column :label="$t('common.status')" width="80">
               <template #default="scope">
                 <el-tag :type="scope.row.status === '在线' ? 'success' : 'danger'" size="small">
                   {{ scope.row.status }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="location" label="位置" width="100" />
-            <el-table-column label="电池" width="120">
+            <el-table-column prop="location" :label="$t('common.location')" width="100" />
+            <el-table-column :label="$t('common.battery')" width="120">
               <template #default="scope">
                 <div class="battery-cell">
                   <el-progress 
@@ -332,10 +332,10 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="120">
+            <el-table-column :label="$t('common.actions')" width="120">
               <template #default="scope">
-                <el-button type="primary" link size="small">详情</el-button>
-                <el-button type="primary" link size="small">控制</el-button>
+                <el-button type="primary" link size="small">{{ $t('common.details') }}</el-button>
+                <el-button type="primary" link size="small">{{ $t('common.control') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -343,7 +343,7 @@
           <!-- 分页 -->
           <div class="pagination-container">
             <div class="pagination-info">
-              显示 1 至 2 条，共 12 条
+              {{ $t('common.showing') }} 1 {{ $t('common.to') }} 2 {{ $t('common.of') }} 12 {{ $t('common.records') }}
             </div>
             <el-pagination
               v-model:current-page="currentPage"

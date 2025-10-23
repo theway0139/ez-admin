@@ -1,332 +1,512 @@
 <template>
-  <div class="settings">
+  <div class="settings-container">
+    <!-- 页面头部 -->
     <div class="page-header">
-      <h1 class="page-title">系统设置</h1>
-      <p class="page-description">管理系统配置和个性化设置</p>
+      <div class="header-left">
+        <h1 class="page-title">{{ $t('settings.title') }}</h1>
+      </div>
+      <div class="header-right">
+        <el-button type="primary" @click="restoreDefaults">
+          {{ $t('settings.restoreDefaults') }}
+        </el-button>
+      </div>
     </div>
 
-    <!-- 设置选项卡 -->
+    <!-- 设置标签页 -->
+    <div class="settings-content">
     <el-tabs v-model="activeTab" class="settings-tabs">
-      <!-- 基本设置 -->
-      <el-tab-pane label="基本设置" name="basic">
-        <el-card class="setting-card">
-          <template #header>
-            <div class="card-header">
-              <span>系统信息</span>
+        <!-- 常规设置 -->
+        <el-tab-pane :label="$t('settings.generalSettings')" name="general">
+          <div class="settings-form">
+            <div class="form-section">
+              <div class="form-row">
+                <div class="form-item">
+                  <label class="form-label">{{ $t('settings.systemName') }}</label>
+                  <el-input 
+                    v-model="generalSettings.system_name" 
+                    placeholder="请输入系统名称"
+                    class="form-input"
+                  />
+                </div>
             </div>
-          </template>
-          
-          <el-form :model="basicSettings" label-width="120px">
-            <el-form-item label="系统名称">
-              <el-input v-model="basicSettings.systemName" placeholder="请输入系统名称" />
-            </el-form-item>
-            
-            <el-form-item label="系统版本">
-              <el-input v-model="basicSettings.version" disabled />
-            </el-form-item>
-            
-            <el-form-item label="管理员邮箱">
-              <el-input v-model="basicSettings.adminEmail" placeholder="请输入管理员邮箱" />
-            </el-form-item>
-            
-            <el-form-item label="系统描述">
+              
+              <div class="form-row">
+                <div class="form-item">
+                  <label class="form-label">{{ $t('settings.systemVersion') }}</label>
+                  <el-input 
+                    v-model="generalSettings.system_version" 
+                    disabled
+                    class="form-input"
+                  />
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.timezone') }}</label>
+                  <el-select 
+                    v-model="generalSettings.timezone" 
+                    placeholder="选择时区"
+                    class="form-input"
+                  >
+                    <el-option label="中国标准时间 (UTC+8)" value="Asia/Shanghai" />
+                    <el-option label="美国东部时间 (UTC-5)" value="America/New_York" />
+                    <el-option label="欧洲中部时间 (UTC+1)" value="Europe/Paris" />
+                  </el-select>
+                </div>
+                
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.language') }}</label>
+                  <el-select
+                    v-model="generalSettings.language"
+                    :placeholder="$t('settings.language')"
+                    class="form-input"
+                    @change="handleLanguageChange"
+                  >
+                    <el-option :label="$t('settings.chinese')" value="zh-CN" />
+                    <el-option :label="$t('settings.english')" value="en-US" />
+                    <el-option :label="$t('settings.japanese')" value="ja-JP" />
+                  </el-select>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-item">
+                  <label class="form-label">{{ $t('settings.systemDescription') }}</label>
               <el-input
-                v-model="basicSettings.description"
+                    v-model="generalSettings.system_description" 
                 type="textarea"
-                :rows="3"
+                    :rows="4"
                 placeholder="请输入系统描述"
-              />
-            </el-form-item>
-          </el-form>
-        </el-card>
+                    class="form-input"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
       </el-tab-pane>
 
       <!-- 安全设置 -->
-      <el-tab-pane label="安全设置" name="security">
-        <el-card class="setting-card">
-          <template #header>
-            <div class="card-header">
-              <span>安全配置</span>
+        <el-tab-pane :label="$t('settings.securitySettings')" name="security">
+          <div class="settings-form">
+            <div class="form-section">
+              <div class="form-row">
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.speed') }}</label>
+                  <el-select 
+                    v-model="securitySettings.password_strength" 
+                    class="form-input"
+                  >
+                    <el-option label="低强度" value="low" />
+                    <el-option label="中等强度" value="medium" />
+                    <el-option label="高强度" value="high" />
+                  </el-select>
             </div>
-          </template>
-          
-          <el-form :model="securitySettings" label-width="120px">
-            <el-form-item label="密码策略">
-              <el-checkbox-group v-model="securitySettings.passwordPolicy">
-                <el-checkbox label="uppercase">必须包含大写字母</el-checkbox>
-                <el-checkbox label="lowercase">必须包含小写字母</el-checkbox>
-                <el-checkbox label="numbers">必须包含数字</el-checkbox>
-                <el-checkbox label="symbols">必须包含特殊字符</el-checkbox>
-              </el-checkbox-group>
-            </el-form-item>
-            
-            <el-form-item label="最小密码长度">
-              <el-input-number
-                v-model="securitySettings.minPasswordLength"
-                :min="6"
-                :max="20"
-                controls-position="right"
-              />
-            </el-form-item>
-            
-            <el-form-item label="登录失败锁定">
-              <el-switch
-                v-model="securitySettings.loginLock"
-                active-text="启用"
-                inactive-text="禁用"
-              />
-            </el-form-item>
-            
-            <el-form-item label="锁定阈值" v-if="securitySettings.loginLock">
-              <el-input-number
-                v-model="securitySettings.lockThreshold"
-                :min="3"
-                :max="10"
-                controls-position="right"
-              />
-              <span class="form-help">次失败后锁定账户</span>
-            </el-form-item>
-            
-            <el-form-item label="会话超时">
-              <el-input-number
-                v-model="securitySettings.sessionTimeout"
-                :min="15"
-                :max="480"
-                controls-position="right"
-              />
-              <span class="form-help">分钟</span>
-            </el-form-item>
-          </el-form>
-        </el-card>
+                
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.sessionTimeout') }}</label>
+                  <el-select 
+                    v-model="securitySettings.session_timeout" 
+                    class="form-input"
+                  >
+                    <el-option label="30分钟" :value="30" />
+                    <el-option label="60分钟" :value="60" />
+                    <el-option label="120分钟" :value="120" />
+                  </el-select>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.passwordPolicy') }}</label>
+                  <el-select 
+                    v-model="securitySettings.password_strength" 
+                    class="form-input"
+                  >
+                    <el-option label="低强度" value="low" />
+                    <el-option label="中等强度" value="medium" />
+                    <el-option label="高强度" value="high" />
+                  </el-select>
+                </div>
+                
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.maxLoginAttempts') }}</label>
+                  <el-input 
+                    v-model.number="securitySettings.max_login_attempts" 
+                    type="number"
+                    class="form-input"
+                  />
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.accountLockoutTime') }}</label>
+                  <el-select 
+                    v-model="securitySettings.account_lockout_time" 
+                    class="form-input"
+                  >
+                    <el-option label="15分钟" :value="15" />
+                    <el-option label="30分钟" :value="30" />
+                    <el-option label="60分钟" :value="60" />
+                  </el-select>
+                </div>
+              </div>
+              
+              <div class="form-section-title">{{ $t('settings.securityOptions') }}</div>
+              <div class="checkbox-group">
+                <el-checkbox v-model="securitySettings.two_factor_auth">
+                  {{ $t('settings.twoFactorAuth') }}
+                </el-checkbox>
+                <el-checkbox v-model="securitySettings.force_password_change">
+                  {{ $t('settings.forcePasswordChange') }}
+                </el-checkbox>
+                <el-checkbox v-model="securitySettings.audit_logging">
+                  {{ $t('settings.auditLogging') }}
+                </el-checkbox>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <!-- 通知设置设置 -->
+        <el-tab-pane :label="$t('settings.notificationSettings')" name="notification">
+          <div class="settings-form">
+            <div class="form-section">
+              <div class="form-section-title">{{ $t('settings.notificationMethods') }}</div>
+              <div class="checkbox-group">
+                <div class="checkbox-row">
+                  <el-checkbox v-model="notificationSettings.email_enabled">
+                    {{ $t('settings.emailNotification') }}
+                  </el-checkbox>
+                  <el-checkbox v-model="notificationSettings.sms_enabled">
+                    {{ $t('settings.smsNotification') }}
+                  </el-checkbox>
+                </div>
+                <div class="checkbox-row">
+                  <el-checkbox v-model="notificationSettings.push_enabled">
+                    {{ $t('settings.pushNotification') }}
+                  </el-checkbox>
+                  <el-checkbox v-model="notificationSettings.webhook_enabled">
+                    {{ $t('settings.webhookNotification') }}
+                  </el-checkbox>
+                </div>
+              </div>
+              
+              <div class="form-section-title">{{ $t('settings.emailServerConfig') }}</div>
+              <div class="form-row">
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.smtpServer') }}</label>
+                  <el-input 
+                    v-model="notificationSettings.smtp_server" 
+                    placeholder="请输入SMTP服务器"
+                    class="form-input"
+                  />
+                </div>
+                
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.smtpPort') }}</label>
+                  <el-input 
+                    v-model.number="notificationSettings.smtp_port" 
+                    placeholder="587"
+                    class="form-input"
+                  />
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.senderEmail') }}</label>
+                  <el-input 
+                    v-model="notificationSettings.smtp_username" 
+                    placeholder="noreply@example.com"
+                    class="form-input"
+                  />
+                </div>
+                
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.senderName') }}</label>
+                  <el-input 
+                    v-model="notificationSettings.sender_name" 
+                    placeholder="系统通知"
+                    class="form-input"
+                  />
+                </div>
+              </div>
+              
+              <div class="form-section-title">{{ $t('settings.notificationEvents') }}</div>
+              <div class="checkbox-group">
+                <div class="checkbox-row">
+                  <el-checkbox v-model="notificationSettings.system_error_notify">
+                    {{ $t('settings.systemError') }}
+                  </el-checkbox>
+                  <el-checkbox v-model="notificationSettings.security_alert_notify">
+                    {{ $t('settings.securityAlert') }}
+                  </el-checkbox>
+                </div>
+                <div class="checkbox-row">
+                  <span class="checkbox-item">false</span>
+                  <span class="label-text">性能问题</span>
+                  <el-checkbox v-model="notificationSettings.task_complete_notify">
+                    {{ $t('settings.backupComplete') }}
+                  </el-checkbox>
+                </div>
+              </div>
+            </div>
+          </div>
       </el-tab-pane>
 
-      <!-- 通知设置 -->
-      <el-tab-pane label="通知设置" name="notification">
-        <el-card class="setting-card">
-          <template #header>
-            <div class="card-header">
-              <span>通知配置</span>
+        <!-- 性能设置 -->
+        <el-tab-pane :label="$t('settings.performanceSettings')" name="performance">
+          <div class="settings-form">
+            <div class="form-section">
+              <div class="form-row">
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.dataRetentionTime') }}</label>
+                  <el-select 
+                    v-model="performanceSettings.data_retention_days" 
+                    class="form-input"
+                  >
+                    <el-option label="30天" :value="30" />
+                    <el-option label="90天" :value="90" />
+                    <el-option label="180天" :value="180" />
+                    <el-option label="365天" :value="365" />
+                  </el-select>
             </div>
-          </template>
-          
-          <el-form :model="notificationSettings" label-width="120px">
-            <el-form-item label="邮件通知">
-              <el-switch
-                v-model="notificationSettings.emailNotification"
-                active-text="启用"
-                inactive-text="禁用"
-              />
-            </el-form-item>
-            
-            <el-form-item label="SMTP服务器" v-if="notificationSettings.emailNotification">
-              <el-input v-model="notificationSettings.smtpServer" placeholder="请输入SMTP服务器地址" />
-            </el-form-item>
-            
-            <el-form-item label="SMTP端口" v-if="notificationSettings.emailNotification">
-              <el-input-number
-                v-model="notificationSettings.smtpPort"
-                :min="1"
-                :max="65535"
-                controls-position="right"
-              />
-            </el-form-item>
-            
-            <el-form-item label="系统通知">
-              <el-checkbox-group v-model="notificationSettings.systemNotifications">
-                <el-checkbox label="user_register">用户注册</el-checkbox>
-                <el-checkbox label="user_login">用户登录</el-checkbox>
-                <el-checkbox label="system_error">系统错误</el-checkbox>
-                <el-checkbox label="security_alert">安全警报</el-checkbox>
-              </el-checkbox-group>
-            </el-form-item>
-          </el-form>
-        </el-card>
-      </el-tab-pane>
-
-      <!-- 界面设置 -->
-      <el-tab-pane label="界面设置" name="ui">
-        <el-card class="setting-card">
-          <template #header>
-            <div class="card-header">
-              <span>界面配置</span>
-            </div>
-          </template>
-          
-          <el-form :model="uiSettings" label-width="120px">
-            <el-form-item label="主题模式">
-              <el-radio-group v-model="uiSettings.theme">
-                <el-radio value="light">浅色主题</el-radio>
-                <el-radio value="dark">深色主题</el-radio>
-                <el-radio value="auto">跟随系统</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            
-            <el-form-item label="主色调">
-              <el-color-picker v-model="uiSettings.primaryColor" />
-            </el-form-item>
-            
-            <el-form-item label="侧边栏宽度">
-              <el-slider
-                v-model="uiSettings.sidebarWidth"
-                :min="200"
-                :max="300"
-                :step="10"
-                show-input
-                show-input-controls
-              />
-            </el-form-item>
-            
-            <el-form-item label="表格密度">
-              <el-radio-group v-model="uiSettings.tableDensity">
-                <el-radio value="default">默认</el-radio>
-                <el-radio value="compact">紧凑</el-radio>
-                <el-radio value="comfortable">舒适</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            
-            <el-form-item label="动画效果">
-              <el-switch
-                v-model="uiSettings.animations"
-                active-text="启用"
-                inactive-text="禁用"
-              />
-            </el-form-item>
-          </el-form>
-        </el-card>
-      </el-tab-pane>
-
-      <!-- 备份设置 -->
-      <el-tab-pane label="备份设置" name="backup">
-        <el-card class="setting-card">
-          <template #header>
-            <div class="card-header">
-              <span>备份配置</span>
-            </div>
-          </template>
-          
-          <el-form :model="backupSettings" label-width="120px">
-            <el-form-item label="自动备份">
-              <el-switch
-                v-model="backupSettings.autoBackup"
-                active-text="启用"
-                inactive-text="禁用"
-              />
-            </el-form-item>
-            
-            <el-form-item label="备份频率" v-if="backupSettings.autoBackup">
-              <el-select v-model="backupSettings.backupFrequency" placeholder="请选择备份频率">
-                <el-option label="每天" value="daily" />
+                
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.logLevel') }}</label>
+                  <el-select 
+                    v-model="performanceSettings.log_level" 
+                    class="form-input"
+                  >
+                    <el-option label="调试" value="DEBUG" />
+                    <el-option label="信息" value="INFO" />
+                    <el-option label="警告" value="WARNING" />
+                    <el-option label="错误" value="ERROR" />
+                  </el-select>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.autoBackupInterval') }}</label>
+                  <el-select 
+                    v-model="performanceSettings.backup_interval" 
+                    class="form-input"
+                  >
+                    <el-option label="每天极速" value="daily" />
                 <el-option label="每周" value="weekly" />
                 <el-option label="每月" value="monthly" />
               </el-select>
-            </el-form-item>
-            
-            <el-form-item label="保留备份数">
-              <el-input-number
-                v-model="backupSettings.retentionCount"
-                :min="1"
-                :max="100"
-                controls-position="right"
-              />
-            </el-form-item>
-            
-            <el-form-item label="备份路径">
-              <el-input v-model="backupSettings.backupPath" placeholder="请输入备份路径" />
-            </el-form-item>
-            
-            <el-form-item>
-              <el-button type="primary" @click="handleManualBackup">
-                <el-icon><Download /></el-icon>
-                立即备份
-              </el-button>
-              <el-button @click="handleRestoreBackup">
-                <el-icon><Upload /></el-icon>
-                恢复备份
-              </el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
+                </div>
+                
+                <div class="form-item half-width">
+                  <label class="form-label">{{ $t('settings.monitoringInterval') }}</label>
+                  <el-select 
+                    v-model="performanceSettings.monitoring_interval" 
+                    class="form-input"
+                  >
+                    <el-option label="30秒" :value="30" />
+                    <el-option label="60秒" :value="60" />
+                    <el-option label="120秒" :value="120" />
+                  </el-select>
+                </div>
+              </div>
+              
+              <div class="form-section-title">{{ $t('settings.performanceOptimization') }}</div>
+              <div class="checkbox-group">
+                <el-checkbox v-model="performanceSettings.enable_data_compression">
+                  {{ $t('settings.enableDataCache') }}
+                </el-checkbox>
+                <el-checkbox v-model="performanceSettings.enable_cache_optimization">
+                  {{ $t('settings.enableCacheOptimization') }}
+                </el-checkbox>
+                <el-checkbox v-model="performanceSettings.enable_realtime_monitoring">
+                  {{ $t('settings.enableRealtimeMonitoring') }}
+                </el-checkbox>
+              </div>
+            </div>
+          </div>
       </el-tab-pane>
     </el-tabs>
-
-    <!-- 操作按钮 -->
-    <div class="action-buttons">
-      <el-button @click="resetSettings">重置设置</el-button>
-      <el-button type="primary" @click="saveSettings">保存设置</el-button>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, reactive } from 'vue'
+<script setup>
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  Download,
-  Upload
-} from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
+import axios from 'axios'
+
+// API基础URL
+const API_BASE = 'http://172.16.160.100:8003/api'
+
+// 国际化
+const { t, locale } = useI18n()
+
+// 导入语言切换函数
+import { changeLanguage } from '../main.js'
 
 // 响应式数据
-const activeTab = ref('basic')
+const loading = ref(false)
+const saving = ref(false)
+const activeTab = ref('general')
 
-// 基本设置
-const basicSettings = reactive({
-  systemName: '后台管理系统',
-  version: 'v1.0.0',
-  adminEmail: 'admin@example.com',
-  description: '这是一个功能完善的后台管理系统，提供用户管理、数据统计等功能。'
+// 常规设置
+const generalSettings = reactive({
+  system_name: '国粒智能边缘控制台',
+  system_version: 'v2.1.0',
+  timezone: 'Asia/Shanghai',
+  language: 'zh-CN',
+  system_description: '智能机器人管理与监控系统'
 })
 
 // 安全设置
 const securitySettings = reactive({
-  passwordPolicy: ['uppercase', 'lowercase', 'numbers'],
-  minPasswordLength: 8,
-  loginLock: true,
-  lockThreshold: 5,
-  sessionTimeout: 30
+  session_timeout: 60,
+  password_strength: 'medium',
+  max_login_attempts: 5,
+  account_lockout_time: 30,
+  two_factor_auth: false,
+  force_password_change: true,
+  audit_logging: true
 })
 
 // 通知设置
 const notificationSettings = reactive({
-  emailNotification: false,
-  smtpServer: 'smtp.example.com',
-  smtpPort: 587,
-  systemNotifications: ['user_register', 'system_error']
+  email_enabled: true,
+  sms_enabled: false,
+  push_enabled: true,
+  webhook_enabled: false,
+  smtp_server: '',
+  smtp_port: 587,
+  smtp_username: 'noreply@example.com',
+  sender_name: '系统通知',
+  system_error_notify: true,
+  security_alert_notify: true,
+  task_complete_notify: true
 })
 
-// 界面设置
-const uiSettings = reactive({
-  theme: 'light',
-  primaryColor: '#409eff',
-  sidebarWidth: 240,
-  tableDensity: 'default',
-  animations: true
+// 性能设置
+const performanceSettings = reactive({
+  data_retention_days: 90,
+  log_level: 'INFO',
+  auto_backup_enabled: false,
+  backup_interval: 'daily',
+  monitoring_interval: 60,
+  enable_data_compression: true,
+  enable_cache_optimization: false,
+  enable_realtime_monitoring: true
 })
 
-// 备份设置
-const backupSettings = reactive({
-  autoBackup: true,
-  backupFrequency: 'daily',
-  retentionCount: 30,
-  backupPath: '/backup'
-})
-
-// 方法
-const saveSettings = async () => {
+// 语言切换处理
+const handleLanguageChange = async (newLanguage) => {
   try {
-    // 这里可以调用API保存设置
-    await new Promise(resolve => setTimeout(resolve, 1000)) // 模拟API调用
-    
-    ElMessage.success('设置保存成功')
+    // 使用全局语言切换函数
+    await changeLanguage(newLanguage)
+
+    // 更新本地设置
+    generalSettings.language = newLanguage
+
+    // 保存到后端
+    await axios.put(`${API_BASE}/settings/general`, generalSettings)
+
+    ElMessage.success(newLanguage === 'zh-CN' ? '语言已切换为中文' : 'Language switched to English')
+
+    // 延迟刷新页面确保所有组件都更新
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
   } catch (error) {
-    ElMessage.error('设置保存失败')
+    console.error('保存语言设置失败:', error)
+    ElMessage.error('保存语言设置失败')
   }
 }
 
-const resetSettings = async () => {
+// 加载设置数据
+const loadGeneralSettings = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/settings/general`)
+    Object.assign(generalSettings, response.data)
+    
+    // 同步语言设置
+    if (response.data.language && response.data.language !== locale.value) {
+      locale.value = response.data.language
+      localStorage.setItem('language', response.data.language)
+    }
+  } catch (error) {
+    console.error('加载常规设置失败:', error)
+  }
+}
+
+const loadSecuritySettings = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/settings/security`)
+    Object.assign(securitySettings, response.data)
+  } catch (error) {
+    console.error('加载安全设置失败:', error)
+  }
+}
+
+const loadNotificationSettings = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/settings/notification`)
+    Object.assign(notificationSettings, response.data)
+  } catch (error) {
+    console.error('加载通知设置失败:', error)
+  }
+}
+
+const loadPerformanceSettings = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/settings/performance`)
+    Object.assign(performanceSettings, response.data)
+  } catch (error) {
+    console.error('加载性能设置失败:', error)
+  }
+}
+
+// 保存设置
+const saveCurrentTabSettings = async () => {
+  saving.value = true
+  try {
+    let response
+    switch (activeTab.value) {
+      case 'general':
+        response = await axios.put(`${API_BASE}/settings/general`, generalSettings)
+        break
+      case 'security':
+        response = await axios.put(`${API_BASE}/settings/security`, securitySettings)
+        break
+      case 'notification':
+        response = await axios.put(`${API_BASE}/settings/notification`, notificationSettings)
+        break
+      case 'performance':
+        response = await axios.put(`${API_BASE}/settings/performance`, performanceSettings)
+        break
+    }
+    
+    if (response?.data?.success) {
+      ElMessage.success(response.data.message || '设置保存成功')
+    } else {
+      ElMessage.error('设置保存失败')
+    }
+  } catch (error) {
+    console.error('保存设置失败:', error)
+    ElMessage.error('设置保存失败')
+  } finally {
+    saving.value = false
+  }
+}
+
+// 恢复默认设置
+const restoreDefaults = async () => {
   try {
     await ElMessageBox.confirm(
-      '确定要重置所有设置吗？此操作不可撤销。',
-      '确认重置',
+      '确定要恢复当前标签页的默认设置吗？此操作不可撤销。',
+      '确认恢复默认',
       {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -334,159 +514,228 @@ const resetSettings = async () => {
       }
     )
     
-    // 重置所有设置到默认值
-    Object.assign(basicSettings, {
-      systemName: '后台管理系统',
-      version: 'v1.0.0',
-      adminEmail: 'admin@example.com',
-      description: '这是一个功能完善的后台管理系统，提供用户管理、数据统计等功能。'
+    await axios.post(`${API_BASE}/settings/restore-defaults`, {
+      setting_type: activeTab.value
     })
     
-    Object.assign(securitySettings, {
-      passwordPolicy: ['uppercase', 'lowercase', 'numbers'],
-      minPasswordLength: 8,
-      loginLock: true,
-      lockThreshold: 5,
-      sessionTimeout: 30
-    })
+    // 重新加载设置
+    switch (activeTab.value) {
+      case 'general':
+        await loadGeneralSettings()
+        break
+      case 'security':
+        await loadSecuritySettings()
+        break
+      case 'notification':
+        await loadNotificationSettings()
+        break
+      case 'performance':
+        await loadPerformanceSettings()
+        break
+    }
     
-    Object.assign(notificationSettings, {
-      emailNotification: false,
-      smtpServer: 'smtp.example.com',
-      smtpPort: 587,
-      systemNotifications: ['user_register', 'system_error']
-    })
-    
-    Object.assign(uiSettings, {
-      theme: 'light',
-      primaryColor: '#409eff',
-      sidebarWidth: 240,
-      tableDensity: 'default',
-      animations: true
-    })
-    
-    Object.assign(backupSettings, {
-      autoBackup: true,
-      backupFrequency: 'daily',
-      retentionCount: 30,
-      backupPath: '/backup'
-    })
-    
-    ElMessage.success('设置已重置')
-  } catch {
-    // 用户取消重置
+    ElMessage.success('设置已恢复默认值')
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('恢复默认设置失败:', error)
+      ElMessage.error('恢复默认设置失败')
+    }
   }
 }
 
-const handleManualBackup = () => {
-  ElMessage.info('开始备份，请稍候...')
-  // 这里可以调用备份API
-}
-
-const handleRestoreBackup = () => {
-  ElMessage.info('恢复备份功能开发中...')
-  // 这里可以调用恢复备份API
-}
+// 生命周期
+onMounted(() => {
+  loadGeneralSettings()
+  loadSecuritySettings()
+  loadNotificationSettings()
+  loadPerformanceSettings()
+})
 </script>
 
 <style scoped>
-.settings {
-  padding: 0;
-  height: 100%;
-  min-height: 100%;
-}
-
-.page-header {
-  margin-bottom: 24px;
-}
-
-.page-title {
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--text-color);
-  margin: 0 0 8px 0;
-}
-
-.page-description {
-  color: #666;
-  margin: 0;
-  font-size: 14px;
-}
-
-/* 设置选项卡 */
-.settings-tabs {
-  margin-bottom: 24px;
+.settings-container {
+  padding: 24px;
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-.settings-tabs .el-tabs__content {
+/* 页面头部 */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 设置内容区域 */
+.settings-content {
+  flex: 1;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.settings-tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-tabs :deep(.el-tabs__content) {
   flex: 1;
   overflow-y: auto;
+  padding: 0;
 }
 
-.settings-tabs .el-tab-pane {
-  height: 100%;
+.settings-tabs :deep(.el-tabs__header) {
+  margin: 0;
+  padding: 0 24px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
 }
 
-.setting-card {
-  margin-bottom: 20px;
-  border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+.settings-tabs :deep(.el-tabs__nav-wrap) {
+  padding: 0;
 }
 
-.setting-card:last-child {
-  margin-bottom: 0;
+.settings-tabs :deep(.el-tabs__item) {
+  padding: 16px 24px;
+  font-weight: 500;
+  color: #666;
 }
 
-.card-header {
+.settings-tabs :deep(.el-tabs__item.is-active) {
+  color: #409eff;
   font-weight: 600;
-  color: var(--text-color);
 }
 
-/* 表单项样式 */
-.form-help {
-  margin-left: 8px;
-  color: #999;
-  font-size: 12px;
+/* 表单样式 */
+.settings-form {
+  padding: 24px;
 }
 
-/* 操作按钮 */
-.action-buttons {
+.form-section {
+  margin-bottom: 32px;
+}
+
+.form-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  margin: 24px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.form-row {
   display: flex;
-  justify-content: center;
-  gap: 16px;
-  padding: 24px 0;
-  border-top: 1px solid #f0f0f0;
-  background-color: #fff;
-  margin-top: auto;
-  flex-shrink: 0;
+  gap: 24px;
+  margin-bottom: 20px;
+  align-items: flex-end;
 }
 
-.dark-mode .action-buttons {
-  background-color: var(--header-bg);
-  border-top-color: var(--border-color);
+.form-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-item.half-width {
+  flex: 0 0 calc(50% - 12px);
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #606266;
+  margin-bottom: 4px;
+}
+
+.form-input {
+  width: 100%;
+}
+
+/* 复选框组样式 */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkbox-row {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+
+.checkbox-item {
+  font-size: 14px;
+  color: #666;
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.label-text {
+  font-size: 14px;
+  color: #606266;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .page-title {
-    font-size: 24px;
+  .settings-container {
+    padding: 16px;
   }
   
-  .action-buttons {
+  .page-header {
     flex-direction: column;
-    align-items: center;
-    padding: 20px 0;
+    gap: 16px;
+    align-items: stretch;
   }
   
-  .el-form-item {
-    margin-bottom: 20px;
+  .form-row {
+    flex-direction: column;
+    gap: 16px;
   }
   
-  .settings-tabs .el-tabs__content {
+  .form-item.half-width {
+    flex: 1;
+  }
+  
+  .checkbox-row {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .settings-tabs :deep(.el-tabs__header) {
     padding: 0 16px;
+  }
+  
+  .settings-form {
+    padding: 16px;
   }
 }
 </style>

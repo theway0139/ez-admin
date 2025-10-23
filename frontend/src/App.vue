@@ -66,7 +66,6 @@
         
         <!-- 系统管理分组 -->
         <div class="menu-group-title">系统管理</div>
-        <!--
         <el-menu-item index="/users">
           <el-icon><User /></el-icon>
           <template #title>用户管理</template>
@@ -79,9 +78,18 @@
         
         <el-menu-item index="/logs">
           <el-icon><Document /></el-icon>
-          <template #title>日志信息</template>
+          <template #title>操作日志</template>
         </el-menu-item>
-        -->
+        
+        <el-menu-item index="/data-backup">
+          <el-icon><Document /></el-icon>
+          <template #title>数据备份</template>
+        </el-menu-item>
+        
+        <el-menu-item index="/log-audit">
+          <el-icon><Document /></el-icon>
+          <template #title>日志审计</template>
+        </el-menu-item>
       </el-menu>
     </aside>
 
