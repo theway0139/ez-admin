@@ -270,6 +270,14 @@
               <el-option label="蓝牙" value="bluetooth" />
             </el-select>
           </div>
+          <div class="config-item">
+            <div class="config-label">用户名</div>
+            <el-input v-model="cameraUsername" placeholder="摄像机用户名（如 admin）" />
+          </div>
+          <div class="config-item">
+            <div class="config-label">密码</div>
+            <el-input v-model="cameraPassword" type="password" placeholder="摄像机密码" show-password />
+          </div>
         </div>
         
         <div class="dialog-footer">
@@ -278,12 +286,185 @@
         </div>
       </div>
     </el-dialog>
+    
+    <!-- 机器人控制弹窗 -->
+    <el-dialog
+      v-model="controlVisible"
+      :title="`控制机器人 - ${controlRobotData?.id || ''}`"
+      width="900px"
+      destroy-on-close
+      class="robot-control-dialog"
+    >
+      <div v-if="controlRobotData" class="robot-control">
+        <!-- 连接状态指示 -->
+        <div class="connection-status">
+          <el-tag 
+            :type="connectionStatus === 'connected' ? 'success' : connectionStatus === 'connecting' ? 'warning' : 'danger'"
+            size="small"
+          >
+            {{ connectionStatus === 'connected' ? '已连接' : connectionStatus === 'connecting' ? '连接中...' : '已断开' }}
+          </el-tag>
+        </div>
+        
+        <div class="control-content">
+          <!-- 左侧视频区域 -->
+          <div class="video-section">
+            <div class="video-container">
+              <video 
+                ref="videoPlayer"
+                class="video-player"
+                controls
+                muted
+                autoplay
+              >
+                您的浏览器不支持视频播放
+              </video>
+              <div v-if="!streamUrl || connectionStatus !== 'connected'" class="video-placeholder">
+                <el-icon size="48" color="#d1d5db"><VideoCamera /></el-icon>
+                <div class="placeholder-text">
+                  {{ connectionStatus === 'connecting' ? '正在连接摄像头...' : '未配置摄像机地址' }}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 右侧控制区域 -->
+          <div class="control-section">
+            <!-- 运动控制 -->
+            <div class="movement-control">
+              <h4>运动控制</h4>
+              <div class="direction-buttons">
+                <!-- 上方向按钮 -->
+                <div class="button-row">
+                  <button 
+                    class="direction-btn up-btn"
+                    @mousedown="startMove('up')"
+                    @mouseup="stopMove"
+                    @mouseleave="stopMove"
+                    :disabled="connectionStatus !== 'connected'"
+                  >
+                    <el-icon size="24"><ArrowUp /></el-icon>
+                  </button>
+                </div>
+                
+                <!-- 左右方向按钮 -->
+                <div class="button-row">
+                  <button 
+                    class="direction-btn left-btn"
+                    @mousedown="startMove('left')"
+                    @mouseup="stopMove"
+                    @mouseleave="stopMove"
+                    :disabled="connectionStatus !== 'connected'"
+                  >
+                    <el-icon size="24"><ArrowLeft /></el-icon>
+                  </button>
+                  
+                  <button 
+                    class="direction-btn stop-btn"
+                    @click="stopMove"
+                    :disabled="connectionStatus !== 'connected'"
+                  >
+                    <el-icon size="20"><Close /></el-icon>
+                  </button>
+                  
+                  <button 
+                    class="direction-btn right-btn"
+                    @mousedown="startMove('right')"
+                    @mouseup="stopMove"
+                    @mouseleave="stopMove"
+                    :disabled="connectionStatus !== 'connected'"
+                  >
+                    <el-icon size="24"><ArrowRight /></el-icon>
+                  </button>
+                </div>
+                
+                <!-- 下方向按钮 -->
+                <div class="button-row">
+                  <button 
+                    class="direction-btn down-btn"
+                    @mousedown="startMove('down')"
+                    @mouseup="stopMove"
+                    @mouseleave="stopMove"
+                    :disabled="connectionStatus !== 'connected'"
+                  >
+                    <el-icon size="24"><ArrowDown /></el-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 速度调节 -->
+            <div class="speed-control">
+              <h4>速度调节</h4>
+              <div class="speed-slider">
+                <el-slider
+                  v-model="controlSpeed"
+                  :min="0"
+                  :max="100"
+                  :step="10"
+                  show-stops
+                  :disabled="connectionStatus !== 'connected'"
+                />
+                <div class="speed-value">{{ controlSpeed }}%</div>
+              </div>
+            </div>
+            
+            <!-- 功能控制 -->
+            <div class="function-control">
+              <h4>功能控制</h4>
+              <div class="function-buttons">
+                <button 
+                  class="function-btn"
+                  @click="takeSnapshot"
+                  :disabled="connectionStatus !== 'connected'"
+                >
+                  <el-icon size="20"><Camera /></el-icon>
+                  <span>拍照</span>
+                </button>
+                
+                <button 
+                  class="function-btn"
+                  @click="toggleRecording"
+                  :disabled="connectionStatus !== 'connected'"
+                >
+                  <el-icon size="20"><VideoCamera /></el-icon>
+                  <span>录像</span>
+                </button>
+                
+                <button 
+                  class="function-btn"
+                  @click="triggerAlarm"
+                  :disabled="connectionStatus !== 'connected'"
+                >
+                  <el-icon size="20"><Bell /></el-icon>
+                  <span>报警</span>
+                </button>
+                
+                <button 
+                  class="function-btn"
+                  @click="toggleLight"
+                  :disabled="connectionStatus !== 'connected'"
+                >
+                  <el-icon size="20"><Sunny /></el-icon>
+                  <span>灯光</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="dialog-footer">
+          <el-button @click="controlVisible = false">关闭</el-button>
+          <el-button type="primary">保存设置</el-button>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { Search, Close, ArrowDown } from '@element-plus/icons-vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { Search, Close, ArrowDown, ArrowUp, ArrowLeft, ArrowRight, VideoCamera, Camera, Bell, Sunny } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 // 响应式数据
@@ -305,8 +486,24 @@ const configVisible = ref(false)
 const configRobotData = ref(null)
 const defaultSpeed = ref('medium')
 const collisionDetection = ref(false)
-const ipAddress = ref('')
+const ipAddress = ref('192.168.1.64')
+const cameraUsername = ref('admin')
+const cameraPassword = ref('okwy1234')
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'
 const connectionType = ref('wifi')
+
+// 控制弹窗相关
+const controlVisible = ref(false)
+const controlRobotData = ref(null)
+const streamUrl = ref('')
+const streamType = ref('hls')
+const controlSpeed = ref(50)
+const isPressing = ref(false)
+const pressTimer = ref(null)
+const currentDirection = ref(null)
+const connectionStatus = ref('disconnected') // connected, disconnected, connecting
+const videoPlayer = ref(null)
+const hlsInstance = ref(null)
 
 // 机器人列表数据
 const robotList = ref([
@@ -424,7 +621,15 @@ const viewDetails = (robot) => {
 }
 
 const controlRobot = (robot) => {
-  console.log('控制机器人:', robot)
+  controlRobotData.value = robot
+  controlVisible.value = true
+  connectionStatus.value = 'connecting'
+  streamType.value = 'hls'
+  // 使用与 RTSPPlayer 一致的 HLS 地址，后续可根据机器人ID映射
+  streamUrl.value = '/streams/cam1/index.m3u8'
+  nextTick(() => {
+    startStream()
+  })
 }
 
 const configRobot = (robot) => {
@@ -433,7 +638,7 @@ const configRobot = (robot) => {
   // 初始化配置数据
   defaultSpeed.value = 'medium' // 默认中速
   collisionDetection.value = false // 默认不启用碰撞检测
-  ipAddress.value = '192.168.1.100' // 默认IP地址
+  ipAddress.value = '192.168.1.64' // 默认IP地址
   connectionType.value = 'wifi' // 默认WiFi连接
   
   configVisible.value = true
@@ -459,8 +664,163 @@ const saveConfig = () => {
   configVisible.value = false
 }
 
+// 控制相关方法
+const startMove = (direction) => {
+  if (isPressing.value) return
+  isPressing.value = true
+  currentDirection.value = direction
+  sendMoveStart(direction)
+}
+
+const stopMove = () => {
+  if (!isPressing.value) return
+  isPressing.value = false
+  if (pressTimer.value) {
+    clearInterval(pressTimer.value)
+    pressTimer.value = null
+  }
+  if (currentDirection.value) {
+    sendMoveStop(currentDirection.value)
+    currentDirection.value = null
+  }
+}
+
+const sendMoveStart = async (direction) => {
+  if (!['up','down','left','right'].includes(direction)) return
+  if (!ipAddress.value) {
+    ElMessage.error('请先在配置中填写摄像机 IP')
+    return
+  }
+  const url = `${API_BASE}/ptz/move/start`
+  const speedInt = Math.max(1, Math.min(7, Math.round(controlSpeed.value / 15)))
+  const payload = {
+    ip: ipAddress.value,
+    username: cameraUsername.value || 'admin',
+    password: cameraPassword.value || '',
+    direction,
+    channel: 1,
+    speed: speedInt
+  }
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    const data = await resp.json().catch(() => ({}))
+    if (!resp.ok || !data || !data.success) {
+      ElMessage.error((data && data.error) || `开始 ${direction} 失败`)
+    }
+  } catch (e) {
+    ElMessage.error(`网络错误：${e.message}`)
+  }
+}
+
+const sendMoveStop = async (direction) => {
+  if (!['up','down','left','right'].includes(direction)) return
+  const url = `${API_BASE}/ptz/move/stop`
+  const speedInt = Math.max(1, Math.min(7, Math.round(controlSpeed.value / 15)))
+  const payload = {
+    ip: ipAddress.value,
+    username: cameraUsername.value || 'admin',
+    password: cameraPassword.value || '',
+    direction,
+    channel: 1,
+    speed: speedInt
+  }
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    const data = await resp.json().catch(() => ({}))
+    if (!resp.ok || !data || !data.success) {
+      ElMessage.error((data && data.error) || `停止 ${direction} 失败`)
+    }
+  } catch (e) {
+    ElMessage.error(`网络错误：${e.message}`)
+  }
+}
+const takeSnapshot = () => {
+  console.log('拍照')
+  ElMessage.success('拍照成功')
+}
+
+const toggleRecording = () => {
+  console.log('录像')
+  ElMessage.success('录像已开始')
+}
+
+const triggerAlarm = () => {
+  console.log('报警')
+  ElMessage.warning('报警已触发')
+}
+
+const toggleLight = () => {
+  console.log('灯光')
+  ElMessage.success('灯光已切换')
+}
+
 onMounted(() => {
   // 页面加载时的初始化逻辑
+})
+
+// 控制弹窗打开/关闭时启动或停止视频
+watch(controlVisible, (visible) => {
+  if (visible) {
+    connectionStatus.value = 'connecting'
+    nextTick(() => startStream())
+  } else {
+    stopStream()
+  }
+})
+
+// 当流地址变化且弹窗已打开时，重新开始播放
+watch(streamUrl, () => {
+  if (controlVisible.value) {
+    startStream()
+  }
+})
+
+const startStream = async () => {
+  try {
+    if (!videoPlayer.value) return
+    const url = streamUrl.value || '/streams/cam1/index.m3u8'
+    videoPlayer.value.src = url
+    try {
+      await videoPlayer.value.play()
+    } catch (_) {
+      // 某些浏览器需要用户交互，失败也不抛错
+    }
+    connectionStatus.value = 'connected'
+  } catch (error) {
+    console.error('播放失败:', error)
+    connectionStatus.value = 'error'
+    ElMessage.error('视频播放失败，请检查网络连接或使用兼容浏览器')
+  }
+}
+
+const stopStream = () => {
+  try {
+    if (videoPlayer.value) {
+      videoPlayer.value.pause()
+      videoPlayer.value.removeAttribute('src')
+      videoPlayer.value.load()
+    }
+    connectionStatus.value = 'disconnected'
+  } catch (e) {
+    console.error('停止播放失败:', e)
+  }
+}
+
+const refreshStream = () => {
+  stopStream()
+  setTimeout(() => startStream(), 500)
+}
+
+onUnmounted(() => {
+  stopStream()
 })
 </script>
 
@@ -740,7 +1100,227 @@ onMounted(() => {
   color: #3b82f6;
 }
 
+/* 机器人控制弹窗样式 */
+.robot-control {
+  padding: 0;
+}
+
+.connection-status {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.control-content {
+  display: flex;
+  gap: 24px;
+  min-height: 400px;
+}
+
+/* 左侧视频区域 */
+.video-section {
+  flex: 1;
+  min-width: 400px;
+}
+
+.video-container {
+  width: 100%;
+  height: 300px;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.placeholder-text {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 右侧控制区域 */
+.control-section {
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.control-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* 运动控制 */
+.movement-control {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.direction-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.direction-btn {
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 12px;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.direction-btn:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.direction-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.direction-btn:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.stop-btn {
+  width: 50px;
+  height: 50px;
+  background: #ef4444;
+}
+
+.stop-btn:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+/* 速度控制 */
+.speed-control {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.speed-slider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.speed-slider .el-slider {
+  flex: 1;
+}
+
+.speed-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* 功能控制 */
+.function-control {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.function-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.function-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 12px;
+}
+
+.function-btn:hover:not(:disabled) {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.function-btn:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 /* 弹窗样式覆盖 */
+:deep(.robot-control-dialog .el-dialog) {
+  border-radius: 12px;
+}
+
+:deep(.robot-control-dialog .el-dialog__header) {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+:deep(.robot-control-dialog .el-dialog__body) {
+  padding: 24px;
+}
+
+:deep(.robot-control-dialog .el-dialog__title) {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
 :deep(.robot-details-dialog .el-dialog__header),
 :deep(.robot-config-dialog .el-dialog__header) {
   padding: 20px;
@@ -797,4 +1377,35 @@ onMounted(() => {
 .full-width {
   width: 100%;
 }
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .control-content {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .video-section {
+    min-width: auto;
+  }
+  
+  .control-section {
+    flex: none;
+  }
+  
+  .video-container {
+    height: 200px;
+  }
+  
+  .direction-btn {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .stop-btn {
+    width: 40px;
+    height: 40px;
+  }
+}
+
 </style>

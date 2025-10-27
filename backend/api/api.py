@@ -6,6 +6,7 @@ from .models import Task
 from .detection_utils import process_image, process_video, process_rubbish_image, process_rubbish_video, process_firesmoke_image, process_firesmoke_video, process_cross_image, process_cross_video
 from .models_loader import is_models_loaded
 import mimetypes
+from camera.ptz_service import PTZController
 
 api = NinjaAPI()
 
@@ -246,3 +247,165 @@ def detect_cross(request, file: UploadedFile = File(...)):
     
     except Exception as e:
         return 500, {"has_cross": False, "error": str(e)}
+
+
+class PTZTurnLeftRequestSchema(Schema):
+    ip: str
+    username: str
+    password: str
+    channel: int = 1
+    speed: int = 4
+    duration: float = 0.8
+
+class PTZMoveRequestSchema(Schema):
+    ip: str
+    username: str
+    password: str
+    direction: str  # 'up' | 'down' | 'left' | 'right'
+    channel: int = 1
+    speed: int = 4
+    duration: float = 0.8
+
+class PTZResponseSchema(Schema):
+    success: bool
+    message: str = None
+    error: str = None
+
+@api.post("/ptz/turn-left", response={200: PTZResponseSchema, 500: PTZResponseSchema})
+def ptz_turn_left(request, body: PTZTurnLeftRequestSchema):
+    controller = PTZController()
+    try:
+        if not controller.load_sdk():
+            return 500, {"success": False, "error": "HCNetSDK加载失败"}
+        controller.set_sdk_init_cfg()
+        if not controller.init_sdk():
+            return 500, {"success": False, "error": "HCNetSDK初始化失败"}
+
+        ip_b = body.ip.encode("utf-8")
+        user_b = body.username.encode("utf-8")
+        pwd_b = body.password.encode("utf-8")
+
+        if not controller.login(ip_b, user_b, pwd_b, 9000):
+            err = controller.hikSDK.NET_DVR_GetLastError()
+            return 500, {"success": False, "error": f"登录失败，错误码: {err}"}
+
+        ok, msg = controller.ptz_turn_left(channel=body.channel, speed=body.speed, duration_sec=body.duration)
+        if not ok:
+            return 500, {"success": False, "error": msg}
+        return 200, {"success": True, "message": msg}
+    except Exception as e:
+        return 500, {"success": False, "error": str(e)}
+    finally:
+        try:
+            controller.logout()
+        finally:
+            controller.cleanup_sdk()
+
+@api.post("/ptz/turn-right", response={200: PTZResponseSchema, 500: PTZResponseSchema})
+def ptz_turn_right(request, body: PTZTurnLeftRequestSchema):
+    controller = PTZController()
+    try:
+        if not controller.load_sdk():
+            return 500, {"success": False, "error": "HCNetSDK加载失败"}
+        controller.set_sdk_init_cfg()
+        if not controller.init_sdk():
+            return 500, {"success": False, "error": "HCNetSDK初始化失败"}
+        ip_b = body.ip.encode("utf-8")
+        user_b = body.username.encode("utf-8")
+        pwd_b = body.password.encode("utf-8")
+        if not controller.login(ip_b, user_b, pwd_b, 9000):
+            err = controller.hikSDK.NET_DVR_GetLastError()
+            return 500, {"success": False, "error": f"登录失败，错误码: {err}"}
+        ok, msg = controller.ptz_turn_right(channel=body.channel, speed=body.speed, duration_sec=body.duration)
+        if not ok:
+            return 500, {"success": False, "error": msg}
+        return 200, {"success": True, "message": msg}
+    except Exception as e:
+        return 500, {"success": False, "error": str(e)}
+    finally:
+        try:
+            controller.logout()
+        finally:
+            controller.cleanup_sdk()
+
+@api.post("/ptz/tilt-up", response={200: PTZResponseSchema, 500: PTZResponseSchema})
+def ptz_tilt_up(request, body: PTZTurnLeftRequestSchema):
+    controller = PTZController()
+    try:
+        if not controller.load_sdk():
+            return 500, {"success": False, "error": "HCNetSDK加载失败"}
+        controller.set_sdk_init_cfg()
+        if not controller.init_sdk():
+            return 500, {"success": False, "error": "HCNetSDK初始化失败"}
+        ip_b = body.ip.encode("utf-8")
+        user_b = body.username.encode("utf-8")
+        pwd_b = body.password.encode("utf-8")
+        if not controller.login(ip_b, user_b, pwd_b, 9000):
+            err = controller.hikSDK.NET_DVR_GetLastError()
+            return 500, {"success": False, "error": f"登录失败，错误码: {err}"}
+        ok, msg = controller.ptz_tilt_up(channel=body.channel, speed=body.speed, duration_sec=body.duration)
+        if not ok:
+            return 500, {"success": False, "error": msg}
+        return 200, {"success": True, "message": msg}
+    except Exception as e:
+        return 500, {"success": False, "error": str(e)}
+    finally:
+        try:
+            controller.logout()
+        finally:
+            controller.cleanup_sdk()
+
+@api.post("/ptz/tilt-down", response={200: PTZResponseSchema, 500: PTZResponseSchema})
+def ptz_tilt_down(request, body: PTZTurnLeftRequestSchema):
+    controller = PTZController()
+    try:
+        if not controller.load_sdk():
+            return 500, {"success": False, "error": "HCNetSDK加载失败"}
+        controller.set_sdk_init_cfg()
+        if not controller.init_sdk():
+            return 500, {"success": False, "error": "HCNetSDK初始化失败"}
+        ip_b = body.ip.encode("utf-8")
+        user_b = body.username.encode("utf-8")
+        pwd_b = body.password.encode("utf-8")
+        if not controller.login(ip_b, user_b, pwd_b, 9000):
+            err = controller.hikSDK.NET_DVR_GetLastError()
+            return 500, {"success": False, "error": f"登录失败，错误码: {err}"}
+        ok, msg = controller.ptz_tilt_down(channel=body.channel, speed=body.speed, duration_sec=body.duration)
+        if not ok:
+            return 500, {"success": False, "error": msg}
+        return 200, {"success": True, "message": msg}
+    except Exception as e:
+        return 500, {"success": False, "error": str(e)}
+    finally:
+        try:
+            controller.logout()
+        finally:
+            controller.cleanup_sdk()
+
+@api.post("/ptz/move/start", response={200: PTZResponseSchema, 500: PTZResponseSchema})
+def ptz_move_start(request, body: PTZMoveRequestSchema):
+    from camera.controller_pool import get_pool
+    pool = get_pool()
+    try:
+        ok, msg = pool.start_move(ip=body.ip, username=body.username, password=body.password,
+                                   direction=body.direction, channel=body.channel, speed=body.speed)
+        pool.cleanup_idle()
+        if not ok:
+            return 500, {"success": False, "error": msg}
+        return 200, {"success": True, "message": msg}
+    except Exception as e:
+        return 500, {"success": False, "error": str(e)}
+
+@api.post("/ptz/move/stop", response={200: PTZResponseSchema, 500: PTZResponseSchema})
+def ptz_move_stop(request, body: PTZMoveRequestSchema):
+    from camera.controller_pool import get_pool
+    pool = get_pool()
+    try:
+        ok, msg = pool.stop_move(ip=body.ip, username=body.username, password=body.password,
+                                  direction=body.direction, channel=body.channel, speed=body.speed)
+        pool.cleanup_idle()
+        if not ok:
+            return 500, {"success": False, "error": msg}
+        return 200, {"success": True, "message": msg}
+    except Exception as e:
+        return 500, {"success": False, "error": str(e)}

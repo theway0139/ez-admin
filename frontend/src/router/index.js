@@ -65,6 +65,11 @@ const routes = [
     name: 'DataAnalysis',
     component: () => import('../views/DataAnalysis.vue')
   },
+  {
+    path: '/rtsp-player',
+    name: 'RTSPPlayer',
+    component: () => import('../views/RTSPPlayer.vue')
+  },
 ]
 
 const router = createRouter({
