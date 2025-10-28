@@ -243,15 +243,18 @@ const loadAlarmEvents = async () => {
       page_size: pageSize.value
     })
     
-    // 添加可选的过滤参数
-    // if (filters.event_type) params.append('event_type', filters.event_type)
-    // if (filters.severity) params.append('severity', filters.severity)
-    // if (filters.status) params.append('status', filters.status)
+    // 直接使用后端地址
+    const apiUrl = `http://172.16.160.100:8000/api2/alarm-events?${params}`
+    console.log('请求API:', apiUrl)
     
-    // 根据环境使用不同的API地址
-    const apiBase = import.meta.env.PROD ? 'http://172.16.160.100:8000' : ''
-    const response = await fetch(`${apiBase}/api2/alarm-events?${params}`)
+    const response = await fetch(apiUrl)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    
     const result = await response.json()
+    console.log('API响应:', result)
     
     if (result.success && result.data) {
       eventList.value = result.data.map(event => ({
@@ -261,85 +264,16 @@ const loadAlarmEvents = async () => {
         detected_at: formatDateTime(event.detected_at)
       }))
       totalCount.value = result.total || 0
-      console.log('成功加载报警事件:', eventList.value.length, '条')
+      console.log('✅ 成功加载报警事件:', eventList.value.length, '条')
+      ElMessage.success(`加载了 ${eventList.value.length} 条报警事件`)
     } else {
-      // 如果后端返回失败，使用模拟数据
-      throw new Error('API返回失败')
+      throw new Error('后端返回数据格式错误')
     }
   } catch (error) {
-    console.error('获取报警事件失败:', error)
-    ElMessage.warning('获取报警事件失败，使用模拟数据')
-    
-    // 使用模拟数据
-    eventList.value = [
-      {
-        id: 1,
-        event_id: 'EV-20230825-001',
-        event_type: 'fire',
-        description: '温度超过安全阈值，当前温度32℃',
-        location: 'A区3楼温度传感器',
-        severity: 'critical',
-        status: 'pending',
-        detected_at: '2023-08-25 01:45:23',
-        confidence: 0.95
-      },
-      {
-        id: 2,
-        event_id: 'EV-20230825-002',
-        event_type: 'stranger',
-        description: '机器人导航系统故障，已断开任务',
-        location: '探索者-X1机器人',
-        severity: 'high',
-        status: 'pending',
-        detected_at: '2023-08-25 01:30:12',
-        confidence: 0.88
-      },
-      {
-        id: 3,
-        event_id: 'EV-20230825-003',
-        event_type: 'phone',
-        description: '检测到未授权人员进入',
-        location: 'B区1楼摄像头',
-        severity: 'medium',
-        status: 'processing',
-        detected_at: '2023-08-25 01:16:05',
-        confidence: 0.76
-      },
-      {
-        id: 4,
-        event_id: 'EV-20230824-045',
-        event_type: 'smoking',
-        description: '空调压缩机故障，已自动切换备用机组',
-        location: 'C区5楼空调系统',
-        severity: 'high',
-        status: 'resolved',
-        detected_at: '2023-08-24 23:10:56',
-        confidence: 0.92
-      },
-      {
-        id: 5,
-        event_id: 'EV-20230824-044',
-        event_type: 'fighting',
-        description: '完成每日巡检扫描的',
-        location: '系统维护',
-        severity: 'low',
-        status: 'resolved',
-        detected_at: '2023-08-24 22:30:00',
-        confidence: 1.0
-      },
-      {
-        id: 6,
-        event_id: 'EV-20230824-043',
-        event_type: 'rubbish',
-        description: '烟雾探测器触发报, 已虚惊',
-        location: 'D区2楼消防系统',
-        severity: 'medium',
-        status: 'resolved',
-        detected_at: '2023-08-24 21:45:18',
-        confidence: 0.65
-      }
-    ]
-    totalCount.value = eventList.value.length
+    console.error('❌ 获取报警事件失败:', error)
+    ElMessage.error(`获取报警事件失败: ${error.message}`)
+    eventList.value = []
+    totalCount.value = 0
   } finally {
     loading.value = false
   }
