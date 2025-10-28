@@ -238,29 +238,35 @@ const filteredEventList = computed(() => {
 const loadAlarmEvents = async () => {
   loading.value = true
   try {
-    const params = {
+    const params = new URLSearchParams({
       page: currentPage.value,
-      page_size: pageSize.value,
-      event_type: '',
-      severity: '',
-      status: ''
-    }
+      page_size: pageSize.value
+    })
     
-    const response = await fetch(`/api2/alarm-events?${new URLSearchParams(params)}`)
-    const data = await response.json()
+    // 添加可选的过滤参数
+    // if (filters.event_type) params.append('event_type', filters.event_type)
+    // if (filters.severity) params.append('severity', filters.severity)
+    // if (filters.status) params.append('status', filters.status)
     
-    if (data.results) {
-      eventList.value = data.results.map(event => ({
+    const response = await fetch(`/api2/alarm-events?${params}`)
+    const result = await response.json()
+    
+    if (result.success && result.data) {
+      eventList.value = result.data.map(event => ({
         ...event,
         event_id: `EV-${event.detected_at?.substring(0, 10).replace(/-/g, '')}${String(event.id).padStart(3, '0')}`,
-        location: `${event.camera?.name || '未知摄像头'} - ${event.camera?.location || '未知位置'}`,
+        location: `${event.camera_name || '摄像头' + event.camera_id} - ${event.camera_location || ''}`,
         detected_at: formatDateTime(event.detected_at)
       }))
-      totalCount.value = data.count || 0
+      totalCount.value = result.total || 0
+      console.log('成功加载报警事件:', eventList.value.length, '条')
+    } else {
+      // 如果后端返回失败，使用模拟数据
+      throw new Error('API返回失败')
     }
   } catch (error) {
     console.error('获取报警事件失败:', error)
-    ElMessage.error('获取报警事件失败')
+    ElMessage.warning('获取报警事件失败，使用模拟数据')
     
     // 使用模拟数据
     eventList.value = [
