@@ -244,7 +244,7 @@ const loadAlarmEvents = async () => {
     })
     
     // 直接使用后端地址
-    const apiUrl = `http://172.16.160.100:8000/api2/alarm-events?${params}`
+    const apiUrl = `http://172.16.160.100:8003/api2/alarm-events?${params}`
     console.log('请求API:', apiUrl)
     
     const response = await fetch(apiUrl)
@@ -393,7 +393,10 @@ const getStatusColor = (status) => {
 // 获取媒体URL
 const getMediaUrl = (path) => {
   if (!path) return ''
-  return path.startsWith('http') ? path : `http://localhost:8000${path}`
+  // 如果已经是完整URL，直接返回
+  if (path.startsWith('http')) return path
+  // 否则拼接后端地址
+  return `http://172.16.160.100:8003${path}`
 }
 
 // 格式化日期时间
