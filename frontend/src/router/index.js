@@ -46,6 +46,11 @@ const routes = [
     component: () => import('../views/RobotManagement.vue')
   },
   {
+    path: '/faces',
+    name: 'FaceManagement',
+    component: () => import('../views/FaceManagement.vue')
+  },
+  {
     path: '/tasks',
     name: 'TaskScheduling',
     component: () => import('../views/TaskScheduling.vue')

@@ -34,6 +34,11 @@
           <template #title>机器人管理</template>
         </el-menu-item>
         
+        <el-menu-item index="/faces">
+          <el-icon><User /></el-icon>
+          <template #title>人脸管理</template>
+        </el-menu-item>
+        
         <el-menu-item index="/tasks">
           <el-icon><Memo /></el-icon>
           <template #title>任务调度</template>
@@ -209,6 +214,7 @@ const breadcrumbs = computed(() => {
   const pathMap: Record<string, string> = {
     '/dashboard': '仪表盘',
     '/robots': '机器人管理',
+    '/faces': '人脸管理',
     '/tasks': '任务调度',
     '/users': '用户管理',
     '/settings': '系统设置',
