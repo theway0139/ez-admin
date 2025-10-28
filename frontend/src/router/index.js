@@ -61,9 +61,9 @@ const routes = [
     component: () => import('../views/RealTimeMonitoring.vue')
   },
   {
-    path: '/event-management',
-    name: 'EventManagement',
-    component: () => import('../views/EventManagement.vue')
+    path: '/alarm-events',
+    name: 'AlarmEvents',
+    component: () => import('../views/AlarmEvents.vue')
   },
   {
     path: '/performance-monitoring',

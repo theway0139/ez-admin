@@ -44,9 +44,9 @@
           <template #title>实时监控</template>
         </el-menu-item>
         
-        <el-menu-item index="/event-management">
+        <el-menu-item index="/alarm-events">
           <el-icon><Warning /></el-icon>
-          <template #title>事件管理</template>
+          <template #title>报警事件</template>
         </el-menu-item>
         
         <el-menu-item index="/video-playback">
@@ -215,7 +215,7 @@ const breadcrumbs = computed(() => {
     '/logs': '日志信息',
     '/video-playback': '录像回放',
     '/real-time-monitoring': '实时监控',
-    '/event-management': '事件管理'
+    '/alarm-events': '报警事件'
   }
   
   const currentPath = route.path

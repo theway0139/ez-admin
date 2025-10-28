@@ -424,3 +424,126 @@ class AuditLog(models.Model):
     
     def __str__(self):
         return f"{self.timestamp} - {self.log_type} - {self.level} - {self.message[:50]}"
+
+
+# ============= 虚拟犬监控系统模型 =============
+
+class Dog(models.Model):
+    """虚拟犬模型"""
+    STATUS_CHOICES = [
+        ('active', '在线'),
+        ('offline', '离线'),
+        ('maintenance', '维护中'),
+    ]
+    
+    name = models.CharField(max_length=100, verbose_name="虚拟犬名称")
+    dog_id = models.CharField(max_length=50, unique=True, default='DOG_DEFAULT', verbose_name="虚拟犬编号")
+    location = models.CharField(max_length=200, verbose_name="巡逻区域")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='offline', verbose_name="状态")
+    description = models.TextField(blank=True, null=True, verbose_name="描述")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    
+    class Meta:
+        verbose_name = "虚拟犬"
+        verbose_name_plural = "虚拟犬"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.name} ({self.dog_id})"
+
+
+class Camera(models.Model):
+    """摄像头模型"""
+    STATUS_CHOICES = [
+        ('online', '在线'),
+        ('offline', '离线'),
+        ('error', '故障'),
+    ]
+    
+    dog = models.ForeignKey(Dog, on_delete=models.CASCADE, related_name='cameras', verbose_name="所属虚拟犬")
+    name = models.CharField(max_length=100, verbose_name="摄像头名称")
+    camera_id = models.CharField(max_length=50, unique=True, default='CAM_DEFAULT', verbose_name="摄像头编号")
+    rtsp_url = models.CharField(max_length=500, verbose_name="RTSP流地址")
+    location = models.CharField(max_length=200, verbose_name="安装位置")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='offline', verbose_name="状态")
+    resolution = models.CharField(max_length=20, default='1920x1080', verbose_name="分辨率")
+    fps = models.IntegerField(default=25, verbose_name="帧率")
+    description = models.TextField(blank=True, null=True, verbose_name="描述")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    
+    class Meta:
+        verbose_name = "摄像头"
+        verbose_name_plural = "摄像头"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.name} ({self.camera_id})"
+
+
+class AlarmEvent(models.Model):
+    """报警事件模型"""
+    EVENT_TYPES = [
+        ('smoking', '吸烟检测'),
+        ('phone', '打电话检测'),
+        ('fire', '火灾检测'),
+        ('stranger', '陌生人检测'),
+        ('fighting', '打架斗殴检测'),
+        ('rubbish', '垃圾检测'),
+        ('crossover', '翻越检测'),
+    ]
+    
+    SEVERITY_CHOICES = [
+        ('low', '低'),
+        ('medium', '中'),
+        ('high', '高'),
+        ('critical', '严重'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', '待处理'),
+        ('processing', '处理中'),
+        ('resolved', '已解决'),
+        ('ignored', '已忽略'),
+    ]
+    
+    dog = models.ForeignKey(Dog, on_delete=models.CASCADE, related_name='alarm_events', verbose_name="所属虚拟犬")
+    camera = models.ForeignKey(Camera, on_delete=models.CASCADE, related_name='alarm_events', verbose_name="触发摄像头")
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES, verbose_name="事件类型")
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, default='medium', verbose_name="严重程度")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="处理状态")
+    
+    title = models.CharField(max_length=200, verbose_name="事件标题")
+    description = models.TextField(verbose_name="事件描述")
+    
+    # 媒体文件
+    image_path = models.CharField(max_length=500, blank=True, null=True, verbose_name="截图路径")
+    video_path = models.CharField(max_length=500, blank=True, null=True, verbose_name="视频路径")
+    
+    # 检测信息
+    confidence = models.FloatField(default=0.0, verbose_name="置信度")
+    detection_data = models.JSONField(blank=True, null=True, verbose_name="检测详细数据")
+    
+    # 时间信息
+    detected_at = models.DateTimeField(verbose_name="检测时间")
+    handled_at = models.DateTimeField(blank=True, null=True, verbose_name="处理时间")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    
+    # 处理信息
+    handler = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="处理人")
+    handle_note = models.TextField(blank=True, null=True, verbose_name="处理备注")
+    
+    class Meta:
+        verbose_name = "报警事件"
+        verbose_name_plural = "报警事件"
+        ordering = ['-detected_at']
+        indexes = [
+            models.Index(fields=['-detected_at']),
+            models.Index(fields=['event_type', 'status']),
+            models.Index(fields=['camera', '-detected_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_event_type_display()} - {self.camera.name} - {self.detected_at}"

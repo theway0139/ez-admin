@@ -341,7 +341,7 @@ import { useI18n } from 'vue-i18n'
 import axios from 'axios'
 
 // API基础URL
-const API_BASE = 'http://172.16.160.100:8003/api'
+const API_BASE = 'http://172.16.160.100:8003/api2'
 
 // 国际化
 const { t, locale } = useI18n()

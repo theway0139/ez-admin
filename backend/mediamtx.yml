@@ -1,0 +1,41 @@
+# MediaMTX配置文件
+
+# API服务器
+api: yes
+apiAddress: 127.0.0.1:9997
+
+# RTSP服务器
+rtspAddress: :8554
+protocols: [udp, multicast, tcp]
+encryption: "no"
+readTimeout: 20s
+
+# HLS服务器
+hlsAddress: :8888
+hlsEncryption: no
+hlsAlwaysRemux: no
+hlsVariant: lowLatency
+hlsSegmentCount: 7
+hlsSegmentDuration: 1s
+hlsPartDuration: 200ms
+hlsSegmentMaxSize: 50M
+hlsAllowOrigin: "*"
+
+# WebRTC服务器
+webrtcAddress: :8889
+webrtcEncryption: no
+webrtcAllowOrigin: "*"
+
+# 日志
+logLevel: info
+logDestinations: [stdout]
+
+# 路径配置
+paths:
+  # 摄像头1的RTSP流
+  camera1:
+    source: rtsp://36.139.10.47:25544/live/RPWtWUrhCDphd_01?expired=20251231110240
+    sourceProtocol: udp
+    sourceOnDemand: yes
+    sourceOnDemandStartTimeout: 20s
+    sourceOnDemandCloseAfter: 10s

@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password
 from django.db.models import Q, Count
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .models import Task, UserProfile, Department, Role, SystemSettings, NotificationSettings, SecuritySettings, PerformanceSettings, OperationLog, BackupFile, BackupSettings, AuditLog
+from .models import Task, UserProfile, Department, Role, SystemSettings, NotificationSettings, SecuritySettings, PerformanceSettings, OperationLog, BackupFile, BackupSettings, AuditLog, Dog, Camera, AlarmEvent
 from django.contrib.auth.models import User
 from .log_utils import LogRecorder
 import os
@@ -13,7 +13,7 @@ import subprocess
 import threading
 from datetime import datetime
 
-api = NinjaAPI()
+api = NinjaAPI(version='2.0.0')
 
 # 定义Schema
 class TaskSchema(Schema):
@@ -1738,3 +1738,101 @@ def export_single_audit_log(request, log_id: int):
         
     except Exception as e:
         return {"error": f"导出单个审计日志失败: {str(e)}"}
+# =============== 报警事件管理 API ===============
+
+class AlarmEventSchema(Schema):
+    id: int
+    dog_id: int
+    camera_id: int
+    event_type: str
+    severity: str
+    status: str
+    title: str
+    description: str
+    image_path: Optional[str] = None
+    video_path: Optional[str] = None
+    confidence: float
+    detected_at: str
+    handled_at: Optional[str] = None
+    created_at: str
+
+@api.get("/alarm-events")
+def list_alarm_events(request, 
+                     page: int = 1, 
+                     page_size: int = 10,
+                     event_type: str = None,
+                     severity: str = None,
+                     status: str = None):
+    """获取报警事件列表"""
+    queryset = AlarmEvent.objects.all().order_by('-detected_at')
+    
+    # 过滤
+    if event_type:
+        queryset = queryset.filter(event_type=event_type)
+    if severity:
+        queryset = queryset.filter(severity=severity)
+    if status:
+        queryset = queryset.filter(status=status)
+    
+    # 分页
+    total = queryset.count()
+    start = (page - 1) * page_size
+    end = start + page_size
+    events = queryset[start:end]
+    
+    return {
+        "success": True,
+        "data": [
+            {
+                "id": event.id,
+                "dog_id": event.dog.id,
+                "camera_id": event.camera.id,
+                "event_type": event.event_type,
+                "severity": event.severity,
+                "status": event.status,
+                "title": event.title,
+                "description": event.description,
+                "image_path": event.image_path,
+                "video_path": event.video_path,
+                "confidence": event.confidence,
+                "detected_at": event.detected_at.isoformat(),
+                "handled_at": event.handled_at.isoformat() if event.handled_at else None,
+                "created_at": event.created_at.isoformat(),
+            }
+            for event in events
+        ],
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+
+@api.get("/video-analysis/status")
+def get_video_analysis_status(request):
+    """获取视频分析服务状态"""
+    from .video_analysis_service import video_analysis_service
+    
+    return {
+        "success": True,
+        "running": video_analysis_service.running,
+        "cameras_count": len(video_analysis_service.cameras)
+    }
+
+@api.post("/video-analysis/start")
+def start_video_analysis(request):
+    """启动视频分析服务"""
+    try:
+        from .video_analysis_service import video_analysis_service
+        video_analysis_service.start_all_cameras()
+        return {"success": True, "message": "视频分析服务已启动"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@api.post("/video-analysis/stop")
+def stop_video_analysis(request):
+    """停止视频分析服务"""
+    try:
+        from .video_analysis_service import video_analysis_service
+        video_analysis_service.stop_all()
+        return {"success": True, "message": "视频分析服务已停止"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
