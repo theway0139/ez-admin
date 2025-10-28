@@ -245,40 +245,28 @@ const filteredFaceList = computed(() => {
 const fetchFaceList = async () => {
   loading.value = true
   try {
-    // TODO: 替换为实际的API接口
-    // const response = await axios.get('/api2/faces', {
-    //   params: {
-    //     page: currentPage.value,
-    //     page_size: pageSize.value
-    //   }
-    // })
-    // faceList.value = response.data.results
-    // totalCount.value = response.data.count
+    const apiUrl = 'http://172.16.160.100:8003'
+    const response = await fetch(`${apiUrl}/api2/faces?page=${currentPage.value}&page_size=${pageSize.value}${selectedStatus.value ? '&status=' + selectedStatus.value : ''}${searchKeyword.value ? '&keyword=' + encodeURIComponent(searchKeyword.value) : ''}`)
+    const result = await response.json()
     
-    // 模拟数据
-    faceList.value = [
-      {
-        id: 1,
-        name: '张三',
-        employeeId: 'EMP001',
-        avatar: '',
-        status: 'active',
-        department: '技术部',
-        uploadTime: '2024/1/15'
-      },
-      {
-        id: 2,
-        name: '李四',
-        employeeId: 'EMP002',
-        avatar: '',
-        status: 'inactive',
-        department: '市场部',
-        uploadTime: '2024/1/10'
-      }
-    ]
-    totalCount.value = faceList.value.length
+    if (result.success) {
+      faceList.value = result.data.map(face => ({
+        id: face.id,
+        name: face.name,
+        employeeId: face.employee_id,
+        avatar: face.avatar_path,
+        status: face.status,
+        department: face.department || '-',
+        uploadTime: new Date(face.created_at).toLocaleDateString('zh-CN')
+      }))
+      totalCount.value = result.total
+    } else {
+      throw new Error(result.error || '获取失败')
+    }
   } catch (error) {
     ElMessage.error('获取人脸列表失败：' + error.message)
+    faceList.value = []
+    totalCount.value = 0
   } finally {
     loading.value = false
   }
@@ -319,11 +307,21 @@ const toggleStatus = async (face) => {
       }
     )
     
-    // TODO: 调用API更新状态
-    // await axios.patch(`/api2/faces/${face.id}`, { status: newStatus })
+    const apiUrl = 'http://172.16.160.100:8003'
+    const response = await fetch(`${apiUrl}/api2/faces/${face.id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    const result = await response.json()
     
-    face.status = newStatus
-    ElMessage.success(`${action}成功`)
+    if (result.success) {
+      face.status = result.data.status
+      ElMessage.success(`${action}成功`)
+    } else {
+      throw new Error(result.error || '操作失败')
+    }
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error(`${action}失败：` + error.message)
@@ -344,14 +342,22 @@ const deleteFace = async (face) => {
       }
     )
     
-    // TODO: 调用API删除
-    // await axios.delete(`/api2/faces/${face.id}`)
+    const apiUrl = 'http://172.16.160.100:8003'
+    const response = await fetch(`${apiUrl}/api2/faces/${face.id}`, {
+      method: 'DELETE'
+    })
+    const result = await response.json()
     
-    const index = faceList.value.findIndex(f => f.id === face.id)
-    if (index > -1) {
-      faceList.value.splice(index, 1)
+    if (result.success) {
+      const index = faceList.value.findIndex(f => f.id === face.id)
+      if (index > -1) {
+        faceList.value.splice(index, 1)
+      }
+      totalCount.value = totalCount.value - 1
+      ElMessage.success('删除成功')
+    } else {
+      throw new Error(result.error || '删除失败')
     }
-    ElMessage.success('删除成功')
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('删除失败：' + error.message)
@@ -367,21 +373,49 @@ const saveFace = async () => {
   }
   
   try {
+    const apiUrl = 'http://172.16.160.100:8003'
+    const payload = {
+      name: currentFace.value.name,
+      employee_id: currentFace.value.employeeId,
+      department: currentFace.value.department,
+      avatar_path: currentFace.value.avatar,
+      status: currentFace.value.status
+    }
+    
     if (currentFace.value.id) {
       // 更新
-      // await axios.put(`/api2/faces/${currentFace.value.id}`, currentFace.value)
-      const index = faceList.value.findIndex(f => f.id === currentFace.value.id)
-      if (index > -1) {
-        faceList.value[index] = { ...currentFace.value }
+      const response = await fetch(`${apiUrl}/api2/faces/${currentFace.value.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+      const result = await response.json()
+      
+      if (result.success) {
+        await fetchFaceList() // 重新加载列表
+        ElMessage.success('更新成功')
+      } else {
+        throw new Error(result.error || '更新失败')
       }
-      ElMessage.success('更新成功')
     } else {
       // 新增
-      // const response = await axios.post('/api2/faces', currentFace.value)
-      currentFace.value.id = Date.now()
-      currentFace.value.uploadTime = new Date().toLocaleDateString()
-      faceList.value.unshift({ ...currentFace.value })
-      ElMessage.success('添加成功')
+      const response = await fetch(`${apiUrl}/api2/faces`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+      const result = await response.json()
+      
+      if (result.success) {
+        await fetchFaceList() // 重新加载列表
+        ElMessage.success('添加成功')
+      } else {
+        throw new Error(result.error || '添加失败')
+      }
     }
     
     dialogVisible.value = false

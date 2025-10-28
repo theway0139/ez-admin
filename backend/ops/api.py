@@ -1839,3 +1839,144 @@ def stop_video_analysis(request):
         return {"success": True, "message": "视频分析服务已停止"}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+# =============== 人脸管理 API ===============
+
+@api.get("/faces")
+def list_faces(request, 
+               page: int = 1, 
+               page_size: int = 10,
+               status: str = None,
+               keyword: str = None):
+    """获取人脸记录列表"""
+    from .models import FaceRecord
+    
+    queryset = FaceRecord.objects.all().order_by('-created_at')
+    
+    # 过滤
+    if status:
+        queryset = queryset.filter(status=status)
+    if keyword:
+        queryset = queryset.filter(
+            models.Q(name__icontains=keyword) | 
+            models.Q(employee_id__icontains=keyword) |
+            models.Q(department__icontains=keyword)
+        )
+    
+    # 分页
+    total = queryset.count()
+    start = (page - 1) * page_size
+    end = start + page_size
+    faces = queryset[start:end]
+    
+    return {
+        "success": True,
+        "data": [
+            {
+                "id": face.id,
+                "name": face.name,
+                "employee_id": face.employee_id,
+                "department": face.department,
+                "avatar_path": face.avatar_path or (face.avatar.url if face.avatar else None),
+                "status": face.status,
+                "description": face.description,
+                "created_at": face.created_at.isoformat(),
+                "updated_at": face.updated_at.isoformat(),
+            }
+            for face in faces
+        ],
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+
+@api.post("/faces")
+def create_face(request, payload: dict):
+    """创建人脸记录"""
+    from .models import FaceRecord
+    
+    try:
+        face = FaceRecord.objects.create(
+            name=payload.get('name'),
+            employee_id=payload.get('employee_id'),
+            department=payload.get('department', ''),
+            avatar_path=payload.get('avatar_path'),
+            status=payload.get('status', 'active'),
+            description=payload.get('description', '')
+        )
+        
+        return {
+            "success": True,
+            "message": "创建成功",
+            "data": {
+                "id": face.id,
+                "name": face.name,
+                "employee_id": face.employee_id
+            }
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@api.put("/faces/{face_id}")
+def update_face(request, face_id: int, payload: dict):
+    """更新人脸记录"""
+    from .models import FaceRecord
+    
+    try:
+        face = FaceRecord.objects.get(id=face_id)
+        
+        if 'name' in payload:
+            face.name = payload['name']
+        if 'employee_id' in payload:
+            face.employee_id = payload['employee_id']
+        if 'department' in payload:
+            face.department = payload['department']
+        if 'avatar_path' in payload:
+            face.avatar_path = payload['avatar_path']
+        if 'status' in payload:
+            face.status = payload['status']
+        if 'description' in payload:
+            face.description = payload['description']
+        
+        face.save()
+        
+        return {"success": True, "message": "更新成功"}
+    except FaceRecord.DoesNotExist:
+        return {"success": False, "error": "人脸记录不存在"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@api.delete("/faces/{face_id}")
+def delete_face(request, face_id: int):
+    """删除人脸记录"""
+    from .models import FaceRecord
+    
+    try:
+        face = FaceRecord.objects.get(id=face_id)
+        face.delete()
+        return {"success": True, "message": "删除成功"}
+    except FaceRecord.DoesNotExist:
+        return {"success": False, "error": "人脸记录不存在"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@api.patch("/faces/{face_id}/status")
+def toggle_face_status(request, face_id: int):
+    """切换人脸记录状态"""
+    from .models import FaceRecord
+    
+    try:
+        face = FaceRecord.objects.get(id=face_id)
+        face.status = 'inactive' if face.status == 'active' else 'active'
+        face.save()
+        
+        return {
+            "success": True,
+            "message": "状态更新成功",
+            "data": {"status": face.status}
+        }
+    except FaceRecord.DoesNotExist:
+        return {"success": False, "error": "人脸记录不存在"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}

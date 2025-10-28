@@ -547,3 +547,48 @@ class AlarmEvent(models.Model):
     
     def __str__(self):
         return f"{self.get_event_type_display()} - {self.camera.name} - {self.detected_at}"
+
+
+# ============= 人脸管理模型 =============
+
+class FaceRecord(models.Model):
+    """人脸记录模型"""
+    STATUS_CHOICES = [
+        ('active', '已激活'),
+        ('inactive', '未激活'),
+    ]
+    
+    # 基本信息
+    name = models.CharField(max_length=100, verbose_name="姓名")
+    employee_id = models.CharField(max_length=50, unique=True, verbose_name="人员ID")
+    department = models.CharField(max_length=100, blank=True, null=True, verbose_name="部门")
+    
+    # 人脸图像
+    avatar = models.ImageField(upload_to='faces/', blank=True, null=True, verbose_name="人脸照片")
+    avatar_path = models.CharField(max_length=500, blank=True, null=True, verbose_name="人脸照片路径")
+    
+    # 状态
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active', verbose_name="状态")
+    
+    # 特征数据（用于人脸识别）
+    face_encoding = models.TextField(blank=True, null=True, verbose_name="人脸特征编码")
+    
+    # 备注信息
+    description = models.TextField(blank=True, null=True, verbose_name="备注")
+    
+    # 时间信息
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    
+    class Meta:
+        verbose_name = "人脸记录"
+        verbose_name_plural = "人脸记录"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['employee_id']),
+            models.Index(fields=['status']),
+            models.Index(fields=['-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.name} ({self.employee_id})"
