@@ -185,7 +185,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Upload, Plus, UploadFilled } from '@element-plus/icons-vue'
-import axios from 'axios'
+
+// axios可能未安装，先注释掉
+// import axios from 'axios'
 
 // 数据状态
 const loading = ref(false)
