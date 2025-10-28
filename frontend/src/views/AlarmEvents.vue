@@ -248,7 +248,9 @@ const loadAlarmEvents = async () => {
     // if (filters.severity) params.append('severity', filters.severity)
     // if (filters.status) params.append('status', filters.status)
     
-    const response = await fetch(`/api2/alarm-events?${params}`)
+    // 根据环境使用不同的API地址
+    const apiBase = import.meta.env.PROD ? 'http://172.16.160.100:8000' : ''
+    const response = await fetch(`${apiBase}/api2/alarm-events?${params}`)
     const result = await response.json()
     
     if (result.success && result.data) {
