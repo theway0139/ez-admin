@@ -91,15 +91,17 @@ class OpsConfig(AppConfig):
             except Exception as e:
                 logger.error(f"❌ 视频分析服务启动失败: {str(e)}", exc_info=True)
         
+        # 启动 RTSP Socket 服务（与模型加载绑定）
+        logger.info("创建RTSP Socket服务后台线程...")
+        rtsp_thread = threading.Thread(target=start_rtsp_socket_server, daemon=True)
+        rtsp_thread.start()
+        logger.info("RTSP Socket服务后台线程已启动")
+        
         # 在后台线程中启动
         logger.info("创建视频分析服务后台线程...")
         thread = threading.Thread(target=start_video_analysis, daemon=True)
         thread.start()
         logger.info("视频分析服务后台线程已启动")
 
-        # 启动 RTSP Socket 服务（与模型加载绑定）
-        logger.info("创建RTSP Socket服务后台线程...")
-        rtsp_thread = threading.Thread(target=start_rtsp_socket_server, daemon=True)
-        rtsp_thread.start()
-        logger.info("RTSP Socket服务后台线程已启动")
+
 
