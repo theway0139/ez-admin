@@ -486,7 +486,7 @@ const collisionDetection = ref(false)
 const ipAddress = ref('172.16.160.43')
 const cameraUsername = ref('admin')
 const cameraPassword = ref('okwy1234')
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8003/api'
 const SOCKET_BASE = import.meta.env.VITE_SOCKET_BASE || 'http://localhost:5001'
 const connectionType = ref('wifi')
 
