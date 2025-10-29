@@ -2,7 +2,7 @@
 # 运行方法：在PowerShell中右键执行或运行命令：
 #   powershell -ExecutionPolicy Bypass -File ./scripts/start_rtsp_hls.ps1
 
-$rtsp = "rtsp://admin:okwy1234@192.168.1.64:554/Streaming/Channels/101/H264"
+$rtsp = "rtsp://admin:okwy1234@172.16.160.43:554/Streaming/Channels/101/H264"
 $outDir = "d:\Users\Desktop\new\frontend\public\streams\cam1"
 $outFile = Join-Path $outDir "index.m3u8"
 

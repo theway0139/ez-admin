@@ -312,93 +312,86 @@
         </div>
         
         <div class="control-content">
-          <!-- 左侧视频区域 -->
-          <div class="video-section">
-            <div class="video-container">
-              <video 
-                ref="videoPlayer"
-                class="video-player"
-                controls
-                muted
-                autoplay
-              >
-                您的浏览器不支持视频播放
-              </video>
-              <div v-if="!streamUrl || connectionStatus !== 'connected'" class="video-placeholder">
-                <el-icon size="48" color="#d1d5db"><VideoCamera /></el-icon>
-                <div class="placeholder-text">
-                  {{ connectionStatus === 'connecting' ? '正在连接摄像头...' : '未配置摄像机地址' }}
+          <!-- 第一行：摄像头画面 + 运动控制 -->
+          <div class="top-row">
+            <div class="video-section">
+              <div class="video-container">
+                <canvas ref="canvasEl" class="video-player"></canvas>
+                <div v-if="connectionStatus !== 'connected'" class="video-placeholder">
+                  <el-icon size="48" color="#d1d5db"><VideoCamera /></el-icon>
+                  <div class="placeholder-text">
+                    {{ connectionStatus === 'connecting' ? '正在连接摄像头...' : '未连接或未配置摄像机' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="movement-section">
+              <div class="movement-control">
+                <h4>运动控制</h4>
+                <div class="direction-buttons">
+                  <!-- 上方向按钮 -->
+                  <div class="button-row">
+                    <button 
+                      :class="['direction-btn','up-btn',{ active: isPressing && currentDirection==='up' }]"
+                      @mousedown="startMove('up')"
+                      @mouseup="stopMove"
+                      @mouseleave="stopMove"
+                      :disabled="connectionStatus !== 'connected'"
+                    >
+                      <el-icon size="24"><ArrowUp /></el-icon>
+                    </button>
+                  </div>
+                  
+                  <!-- 左右方向按钮 -->
+                  <div class="button-row">
+                    <button 
+                      :class="['direction-btn','left-btn',{ active: isPressing && currentDirection==='left' }]"
+                      @mousedown="startMove('left')"
+                      @mouseup="stopMove"
+                      @mouseleave="stopMove"
+                      :disabled="connectionStatus !== 'connected'"
+                    >
+                      <el-icon size="24"><ArrowLeft /></el-icon>
+                    </button>
+                    
+                    <button 
+                      class="direction-btn stop-btn"
+                      @click="stopMove"
+                      :disabled="connectionStatus !== 'connected'"
+                    >
+                      <el-icon size="20"><Close /></el-icon>
+                    </button>
+                    
+                    <button 
+                      :class="['direction-btn','right-btn',{ active: isPressing && currentDirection==='right' }]"
+                      @mousedown="startMove('right')"
+                      @mouseup="stopMove"
+                      @mouseleave="stopMove"
+                      :disabled="connectionStatus !== 'connected'"
+                    >
+                      <el-icon size="24"><ArrowRight /></el-icon>
+                    </button>
+                  </div>
+                  
+                  <!-- 下方向按钮 -->
+                  <div class="button-row">
+                    <button 
+                      :class="['direction-btn','down-btn',{ active: isPressing && currentDirection==='down' }]"
+                      @mousedown="startMove('down')"
+                      @mouseup="stopMove"
+                      @mouseleave="stopMove"
+                      :disabled="connectionStatus !== 'connected'"
+                    >
+                      <el-icon size="24"><ArrowDown /></el-icon>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          
-          <!-- 右侧控制区域 -->
-          <div class="control-section">
-            <!-- 运动控制 -->
-            <div class="movement-control">
-              <h4>运动控制</h4>
-              <div class="direction-buttons">
-                <!-- 上方向按钮 -->
-                <div class="button-row">
-                  <button 
-                    class="direction-btn up-btn"
-                    @mousedown="startMove('up')"
-                    @mouseup="stopMove"
-                    @mouseleave="stopMove"
-                    :disabled="connectionStatus !== 'connected'"
-                  >
-                    <el-icon size="24"><ArrowUp /></el-icon>
-                  </button>
-                </div>
-                
-                <!-- 左右方向按钮 -->
-                <div class="button-row">
-                  <button 
-                    class="direction-btn left-btn"
-                    @mousedown="startMove('left')"
-                    @mouseup="stopMove"
-                    @mouseleave="stopMove"
-                    :disabled="connectionStatus !== 'connected'"
-                  >
-                    <el-icon size="24"><ArrowLeft /></el-icon>
-                  </button>
-                  
-                  <button 
-                    class="direction-btn stop-btn"
-                    @click="stopMove"
-                    :disabled="connectionStatus !== 'connected'"
-                  >
-                    <el-icon size="20"><Close /></el-icon>
-                  </button>
-                  
-                  <button 
-                    class="direction-btn right-btn"
-                    @mousedown="startMove('right')"
-                    @mouseup="stopMove"
-                    @mouseleave="stopMove"
-                    :disabled="connectionStatus !== 'connected'"
-                  >
-                    <el-icon size="24"><ArrowRight /></el-icon>
-                  </button>
-                </div>
-                
-                <!-- 下方向按钮 -->
-                <div class="button-row">
-                  <button 
-                    class="direction-btn down-btn"
-                    @mousedown="startMove('down')"
-                    @mouseup="stopMove"
-                    @mouseleave="stopMove"
-                    :disabled="connectionStatus !== 'connected'"
-                  >
-                    <el-icon size="24"><ArrowDown /></el-icon>
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <!-- 速度调节 -->
+
+          <!-- 第二行：速度调节 + 功能控制 -->
+          <div class="bottom-row">
             <div class="speed-control">
               <h4>速度调节</h4>
               <div class="speed-slider">
@@ -413,11 +406,9 @@
                 <div class="speed-value">{{ controlSpeed }}%</div>
               </div>
             </div>
-            
-            <!-- 功能控制 -->
             <div class="function-control">
               <h4>功能控制</h4>
-              <div class="function-buttons">
+              <div class="function-buttons horizontal">
                 <button 
                   class="function-btn"
                   @click="takeSnapshot"
@@ -469,6 +460,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import io from 'socket.io-client'
 import { Search, Close, ArrowDown, ArrowUp, ArrowLeft, ArrowRight, VideoCamera, Camera, Bell, Sunny } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
@@ -491,17 +483,18 @@ const configVisible = ref(false)
 const configRobotData = ref(null)
 const defaultSpeed = ref('medium')
 const collisionDetection = ref(false)
-const ipAddress = ref('192.168.1.64')
+const ipAddress = ref('172.16.160.43')
 const cameraUsername = ref('admin')
 const cameraPassword = ref('okwy1234')
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'
+const SOCKET_BASE = import.meta.env.VITE_SOCKET_BASE || 'http://localhost:5001'
 const connectionType = ref('wifi')
 
 // 控制弹窗相关
 const controlVisible = ref(false)
 const controlRobotData = ref(null)
 const streamUrl = ref('')
-const streamType = ref('hls')
+const streamType = ref('socket')
 const controlSpeed = ref(50)
 const isPressing = ref(false)
 const pressTimer = ref(null)
@@ -509,6 +502,33 @@ const currentDirection = ref(null)
 const connectionStatus = ref('disconnected') // connected, disconnected, connecting
 const videoPlayer = ref(null)
 const hlsInstance = ref(null)
+const socket = ref(null)
+const canvasEl = ref(null)
+let canvasCtx = null
+
+// 调试相关
+const debugEvents = ref([])
+const lastAction = ref('')
+const lastActionAt = ref('')
+
+const directionText = (d) => {
+  switch (d) {
+    case 'up': return '上'
+    case 'down': return '下'
+    case 'left': return '左'
+    case 'right': return '右'
+    default: return String(d || '')
+  }
+}
+
+const logDebug = (msg, meta = {}) => {
+  const ts = new Date().toLocaleTimeString()
+  lastAction.value = msg
+  lastActionAt.value = ts
+  debugEvents.value.unshift({ ts, msg, meta })
+  if (debugEvents.value.length > 20) debugEvents.value.pop()
+  console.debug('[RobotControl]', msg, meta)
+}
 
 // 机器人列表数据
 const robotList = ref([
@@ -643,7 +663,7 @@ const configRobot = (robot) => {
   // 初始化配置数据
   defaultSpeed.value = 'medium' // 默认中速
   collisionDetection.value = false // 默认不启用碰撞检测
-  ipAddress.value = '192.168.1.64' // 默认IP地址
+  ipAddress.value = '172.16.160.43' // 默认IP地址
   connectionType.value = 'wifi' // 默认WiFi连接
   
   configVisible.value = true
@@ -674,6 +694,9 @@ const startMove = (direction) => {
   if (isPressing.value) return
   isPressing.value = true
   currentDirection.value = direction
+  const dirTxt = directionText(direction)
+  logDebug(`开始移动：${dirTxt}`, { direction, speed: controlSpeed.value, robotId: controlRobotData.value?.id })
+  ElMessage({ message: `开始移动：${dirTxt}`, type: 'info' })
   sendMoveStart(direction)
 }
 
@@ -685,6 +708,9 @@ const stopMove = () => {
     pressTimer.value = null
   }
   if (currentDirection.value) {
+    const dirTxt = directionText(currentDirection.value)
+    logDebug(`停止移动：${dirTxt}`, { direction: currentDirection.value, speed: controlSpeed.value, robotId: controlRobotData.value?.id })
+    ElMessage({ message: `停止移动：${dirTxt}` , type: 'warning' })
     sendMoveStop(currentDirection.value)
     currentDirection.value = null
   }
@@ -707,6 +733,7 @@ const sendMoveStart = async (direction) => {
     speed: speedInt
   }
   try {
+    logDebug('发送 PTZ 开始', { direction, speed: speedInt, payload })
     const resp = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -714,9 +741,13 @@ const sendMoveStart = async (direction) => {
     })
     const data = await resp.json().catch(() => ({}))
     if (!resp.ok || !data || !data.success) {
+      logDebug('PTZ 开始失败', { direction, error: (data && data.error) || resp.statusText })
       ElMessage.error((data && data.error) || `开始 ${direction} 失败`)
+    } else {
+      logDebug('PTZ 开始成功', { direction })
     }
   } catch (e) {
+    logDebug('PTZ 开始异常', { direction, error: e.message })
     ElMessage.error(`网络错误：${e.message}`)
   }
 }
@@ -734,6 +765,7 @@ const sendMoveStop = async (direction) => {
     speed: speedInt
   }
   try {
+    logDebug('发送 PTZ 停止', { direction, speed: speedInt, payload })
     const resp = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -741,9 +773,13 @@ const sendMoveStop = async (direction) => {
     })
     const data = await resp.json().catch(() => ({}))
     if (!resp.ok || !data || !data.success) {
+      logDebug('PTZ 停止失败', { direction, error: (data && data.error) || resp.statusText })
       ElMessage.error((data && data.error) || `停止 ${direction} 失败`)
+    } else {
+      logDebug('PTZ 停止成功', { direction })
     }
   } catch (e) {
+    logDebug('PTZ 停止异常', { direction, error: e.message })
     ElMessage.error(`网络错误：${e.message}`)
   }
 }
@@ -788,34 +824,104 @@ watch(streamUrl, () => {
   }
 })
 
+const buildRtspUrl = (ip, user, pwd) => {
+  if (!ip || !user || !pwd) return ''
+  // 默认海康主码流路径，可在配置中调整
+  return `rtsp://${encodeURIComponent(user)}:${encodeURIComponent(pwd)}@${ip}:554/Streaming/Channels/101`
+}
+
 const startStream = async () => {
   try {
-    if (!videoPlayer.value) return
-    const url = streamUrl.value || '/streams/cam1/index.m3u8'
-    videoPlayer.value.src = url
-    try {
-      await videoPlayer.value.play()
-    } catch (_) {
-      // 某些浏览器需要用户交互，失败也不抛错
+    if (!canvasEl.value) return
+    // 始终从当前可见的 canvas 获取 2D 上下文，避免使用已被销毁的旧上下文
+    canvasCtx = canvasEl.value.getContext('2d')
+
+    const rtsp = buildRtspUrl(ipAddress.value, cameraUsername.value, cameraPassword.value)
+    if (!rtsp) {
+      connectionStatus.value = 'disconnected'
+      ElMessage.warning('请先在配置中填写摄像机IP/用户名/密码')
+      return
     }
-    connectionStatus.value = 'connected'
+
+    // 建立 Socket 连接
+    if (socket.value) {
+      try { socket.value.disconnect() } catch (_) {}
+      socket.value = null
+    }
+    socket.value = io(SOCKET_BASE, { transports: ['websocket'] })
+
+    socket.value.on('connect', () => {
+      // 订阅指定机器人
+      const rid = controlRobotData.value?.id || 'default'
+      socket.value.emit('subscribe', { robotId: String(rid), rtsp })
+    })
+
+    let firstFrame = true
+    socket.value.on('frame', (payload) => {
+      const { url } = payload || {}
+      if (!url) return
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        // 自适应画布大小
+        const cw = canvasEl.value.clientWidth || 800
+        const ch = canvasEl.value.clientHeight || 300
+        canvasEl.value.width = cw
+        canvasEl.value.height = ch
+        canvasCtx.clearRect(0, 0, cw, ch)
+        // 等比缩放居中
+        const scale = Math.min(cw / img.width, ch / img.height)
+        const dw = img.width * scale
+        const dh = img.height * scale
+        const dx = (cw - dw) / 2
+        const dy = (ch - dh) / 2
+        canvasCtx.drawImage(img, dx, dy, dw, dh)
+        if (firstFrame) {
+          connectionStatus.value = 'connected'
+          firstFrame = false
+        }
+      }
+      img.onerror = () => {
+        // 保持上一帧，状态不变
+      }
+      img.src = url
+    })
+
+    socket.value.on('disconnect', () => {
+      connectionStatus.value = 'disconnected'
+    })
+
+    socket.value.on('error', () => {
+      connectionStatus.value = 'error'
+      ElMessage.error('视频连接失败，请检查后端Socket服务')
+    })
+
   } catch (error) {
-    console.error('播放失败:', error)
+    console.error('连接失败:', error)
     connectionStatus.value = 'error'
-    ElMessage.error('视频播放失败，请检查网络连接或使用兼容浏览器')
+    ElMessage.error('视频连接失败，请检查网络或后端服务')
   }
 }
 
 const stopStream = () => {
   try {
-    if (videoPlayer.value) {
-      videoPlayer.value.pause()
-      videoPlayer.value.removeAttribute('src')
-      videoPlayer.value.load()
+    const rid = controlRobotData.value?.id || 'default'
+    if (socket.value && socket.value.connected) {
+      socket.value.emit('unsubscribe', { robotId: String(rid) })
+      socket.value.disconnect()
     }
+    socket.value = null
+    // 清空画布
+    if (canvasCtx && canvasEl.value) {
+      const cw = canvasEl.value.width
+      const ch = canvasEl.value.height
+      canvasCtx.clearRect(0, 0, cw, ch)
+    }
+    // 释放旧的 canvas 上下文，确保下次打开重新绑定到新元素
+    canvasCtx = null
     connectionStatus.value = 'disconnected'
   } catch (e) {
-    console.error('停止播放失败:', e)
+    console.error('停止连接失败:', e)
   }
 }
 
@@ -1108,6 +1214,17 @@ onUnmounted(() => {
 /* 机器人控制弹窗样式 */
 .robot-control {
   padding: 0;
+  /* 可调布局变量（默认值） */
+  --control-gap: 24px;          /* 两行及左右模块的间距 */
+  --row-gap: 24px;              /* 行间距 */
+  --movement-width: 280px;      /* 运动控制区宽度 */
+  --video-min-width: 400px;     /* 视频区域最小宽度 */
+  --video-height: 300px;        /* 视频容器高度 */
+  --bottom-left-flex: 1;        /* 第二行左侧（速度）占比 */
+  --bottom-right-flex: 1;       /* 第二行右侧（功能）占比 */
+  --function-gap: 12px;         /* 功能按钮之间的间距 */
+  --direction-gap: 8px;         /* 方向按钮行与列间距 */
+  --speed-gap: 12px;            /* 速度滑块与数值的间距 */
 }
 
 .connection-status {
@@ -1118,19 +1235,43 @@ onUnmounted(() => {
 
 .control-content {
   display: flex;
-  gap: 24px;
+  flex-direction: column;
+  gap: var(--row-gap);
   min-height: 400px;
 }
+
+/* 控制弹窗两行布局 */
+.top-row,
+.bottom-row {
+  display: flex;
+  gap: var(--control-gap);
+  align-items: flex-start;
+}
+
+/* 第一行右侧运动区域宽度与原保持一致 */
+.movement-section {
+  flex: 0 0 var(--movement-width);
+}
+
+/* 第二行左右均分 */
+.bottom-row .speed-control,
+.bottom-row .function-control {
+  flex: 1;
+}
+
+/* 第二行左右占比可调 */
+.bottom-row .speed-control { flex: var(--bottom-left-flex); }
+.bottom-row .function-control { flex: var(--bottom-right-flex); }
 
 /* 左侧视频区域 */
 .video-section {
   flex: 1;
-  min-width: 400px;
+  min-width: var(--video-min-width);
 }
 
 .video-container {
   width: 100%;
-  height: 300px;
+  height: var(--video-height);
   background: #000;
   border-radius: 8px;
   overflow: hidden;
@@ -1186,12 +1327,12 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--direction-gap);
 }
 
 .button-row {
   display: flex;
-  gap: 8px;
+  gap: var(--direction-gap);
   align-items: center;
 }
 
@@ -1248,7 +1389,7 @@ onUnmounted(() => {
 .speed-slider {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--speed-gap);
 }
 
 .speed-slider .el-slider {
@@ -1273,7 +1414,14 @@ onUnmounted(() => {
 .function-buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: var(--function-gap);
+}
+
+/* 功能按钮横排（四个一行） */
+.function-buttons.horizontal {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--function-gap);
 }
 
 .function-btn {
