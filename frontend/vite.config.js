@@ -20,7 +20,7 @@ export default defineConfig({
       },
       // 代理媒体文件请求
       '/media': {
-        target: 'http://172.16.160.43:8000',
+        target: 'http://172.16.160.100:8000',
         changeOrigin: true,
         rewrite: (path) => path
       }
