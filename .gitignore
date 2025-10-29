@@ -12,6 +12,7 @@ settings.py
 *.bat
 models
 pic
+rtsp_frames
 
 node_modules
 dist
